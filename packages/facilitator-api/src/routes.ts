@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { SolanaService } from './solana';
 import { WebhookService, WebhookPayload } from './webhooks';
 import { QRCodeService } from './qrcode';
-import { PaymentRequest, PaymentSession, VerifyRequest, SettleRequest, CreateBudgetRequest, SessionBudget, BudgetPaymentRequest } from './types';
+import { PaymentRequest, PaymentSession, VerifyRequest, SettleRequest, CreateBudgetRequest, SessionBudget, BudgetPaymentRequest, CreateUsernameRequest, UserProfile, UsernamePaymentRequest } from './types';
 import { config } from './config';
 import { verify as x402Verify, Supported } from 'x402';
 
@@ -15,6 +15,10 @@ const qrCodeService = new QRCodeService();
 
 // Budget storage (replace with DB in production)
 const budgets = new Map<string, SessionBudget & { payments: string[] }>();
+
+// Username storage (replace with DB in production)
+const usernames = new Map<string, UserProfile>();
+const publicKeyToUsername = new Map<string, string>();
 // In-memory storage (replace with DB in production)
 const sessions = new Map<string, PaymentSession & { keypair: any }>();
 
@@ -493,5 +497,163 @@ router.get('/supported', (req: Request, res: Response) => {
   };
   res.json(supported);
 });
+
+
+// Register username
+router.post('/username/register', (req: Request, res: Response) => {
+  try {
+    const { username, publicKey, metadata }: CreateUsernameRequest = req.body;
+
+    if (!username || !publicKey) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Validate username format (alphanumeric, underscore, 3-20 chars)
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      return res.status(400).json({ error: 'Invalid username format. Use 3-20 alphanumeric characters or underscore' });
+    }
+
+    // Check if username already exists
+    if (usernames.has(username.toLowerCase())) {
+      return res.status(409).json({ error: 'Username already taken' });
+    }
+
+    // Check if public key already has a username
+    if (publicKeyToUsername.has(publicKey)) {
+      return res.status(409).json({ error: 'Public key already has a username' });
+    }
+
+    const profile: UserProfile = {
+      username: username.toLowerCase(),
+      publicKey,
+      reputation: 100, // Starting reputation
+      totalTransactions: 0,
+      totalVolume: 0,
+      successfulPayments: 0,
+      failedPayments: 0,
+      createdAt: new Date(),
+      lastActive: new Date(),
+      metadata
+    };
+
+    usernames.set(username.toLowerCase(), profile);
+    publicKeyToUsername.set(publicKey, username.toLowerCase());
+
+    res.json({
+      username: profile.username,
+      publicKey: profile.publicKey,
+      reputation: profile.reputation,
+      createdAt: profile.createdAt
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user profile by username
+router.get('/username/:username', (req: Request, res: Response) => {
+  const username = req.params.username.toLowerCase();
+  const profile = usernames.get(username);
+
+  if (!profile) {
+    return res.status(404).json({ error: 'Username not found' });
+  }
+
+  res.json(profile);
+});
+
+// Get username by public key
+router.get('/publickey/:publicKey', (req: Request, res: Response) => {
+  const username = publicKeyToUsername.get(req.params.publicKey);
+
+  if (!username) {
+    return res.status(404).json({ error: 'No username found for this public key' });
+  }
+
+  const profile = usernames.get(username);
+  res.json(profile);
+});
+
+// Pay to username
+router.post('/username/pay', async (req: Request, res: Response) => {
+  try {
+    const { username, amount, reference, metadata }: UsernamePaymentRequest = req.body;
+
+    if (!username || !amount || !reference) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const profile = usernames.get(username.toLowerCase());
+    if (!profile) {
+      return res.status(404).json({ error: 'Username not found' });
+    }
+
+    // Create payment session using the user's public key
+    const sessionId = uuidv4();
+    const feeAmount = (amount * config.feePercentage) / 100;
+    const totalAmount = amount + feeAmount;
+    const keypair = await solanaService.generateDepositAddress();
+    const depositAddress = keypair.publicKey.toString();
+
+    const qrCode = await qrCodeService.generatePaymentQR({
+      address: depositAddress,
+      amount: totalAmount,
+      token: config.usdcMint,
+      label: `Payment to @${username}`,
+      message: `Order: ${reference}`,
+      reference: sessionId
+    });
+
+    const session: PaymentSession & { keypair: any; recipientUsername: string } = {
+      sessionId,
+      merchantId: `@${username}`,
+      amount,
+      feeAmount,
+      reference,
+      status: 'pending',
+      depositAddress,
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      keypair: Array.from(keypair.secretKey),
+      recipientUsername: username
+    };
+
+    sessions.set(sessionId, session as any);
+
+    // Update last active
+    profile.lastActive = new Date();
+
+    const { keypair: _, ...sessionResponse } = session;
+    res.json({
+      ...sessionResponse,
+      recipientPublicKey: profile.publicKey,
+      recipientReputation: profile.reputation,
+      qrCode,
+      solanaPayUrl: `solana:${depositAddress}?amount=${totalAmount}&spl-token=${config.usdcMint}&label=${encodeURIComponent(`Payment to @${username}`)}&message=${encodeURIComponent(`Order: ${reference}`)}&reference=${sessionId}`
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update reputation after payment (called internally after verify)
+function updateReputation(username: string, success: boolean, amount: number) {
+  const profile = usernames.get(username.toLowerCase());
+  if (!profile) return;
+
+  profile.totalTransactions++;
+  profile.lastActive = new Date();
+
+  if (success) {
+    profile.successfulPayments++;
+    profile.totalVolume += amount;
+    // Increase reputation (max 1000)
+    profile.reputation = Math.min(1000, profile.reputation + 5);
+  } else {
+    profile.failedPayments++;
+    // Decrease reputation (min 0)
+    profile.reputation = Math.max(0, profile.reputation - 10);
+  }
+}
 
 export default router;

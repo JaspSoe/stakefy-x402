@@ -56,3 +56,29 @@ export interface BudgetPaymentRequest {
   reference: string;
   metadata?: any;
 }
+
+export interface CreateUsernameRequest {
+  username: string;
+  publicKey: string;
+  metadata?: any;
+}
+
+export interface UserProfile {
+  username: string;
+  publicKey: string;
+  reputation: number;
+  totalTransactions: number;
+  totalVolume: number;
+  successfulPayments: number;
+  failedPayments: number;
+  createdAt: Date;
+  lastActive: Date;
+  metadata?: any;
+}
+
+export interface UsernamePaymentRequest {
+  username: string;
+  amount: number;
+  reference: string;
+  metadata?: any;
+}
