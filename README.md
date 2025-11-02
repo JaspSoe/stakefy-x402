@@ -2,13 +2,15 @@
 
 Open-source x402 payment facilitator for Solana. Better than PayAI.
 
-## 🚀 Features
+**🚀 LIVE API:** https://stakefy-x402-production.up.railway.app
 
-- **0.5% fees** (vs PayAI's 1-2%)
+## 🎯 Features
+
+- **0.1% fees** (vs PayAI's 1-2%)
 - **Open source** (vs closed)
-- **USDC payments** on Solana
+- **USDC payments** on Solana devnet
 - **Simple integration** with SDKs
-- **Full transparency**
+- **Production ready**
 
 ## 📦 Packages
 
@@ -16,14 +18,29 @@ Open-source x402 payment facilitator for Solana. Better than PayAI.
 - `@stakefy-x402/client-sdk` - Client SDK for payers
 - `@stakefy-x402/merchant-sdk` - Merchant SDK for receivers
 
-## 🎯 Quick Start
+## 🚀 Quick Start
+
+### Test the API
+```bash
+# Health check
+curl https://stakefy-x402-production.up.railway.app/health
+
+# Create payment session
+curl -X POST https://stakefy-x402-production.up.railway.app/api/payment/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "merchantId": "your_merchant_id",
+    "amount": 10,
+    "reference": "order_123"
+  }'
+```
 
 ### For Merchants
 ```typescript
 import { StakefyX402Merchant } from '@stakefy-x402/merchant-sdk';
 
 const merchant = new StakefyX402Merchant({
-  facilitatorUrl: 'https://api.stakefy.io',
+  facilitatorUrl: 'https://stakefy-x402-production.up.railway.app',
   merchantId: 'your_merchant_id',
   merchantWallet: 'your_solana_wallet'
 });
@@ -40,7 +57,7 @@ const result = await merchant.settlePayment(sessionId);
 import { StakefyX402Client } from '@stakefy-x402/client-sdk';
 
 const client = new StakefyX402Client({
-  facilitatorUrl: 'https://api.stakefy.io',
+  facilitatorUrl: 'https://stakefy-x402-production.up.railway.app',
   merchantId: 'merchant_id'
 });
 
@@ -58,34 +75,40 @@ const signature = await client.payWithWallet(session, payerKeypair);
 ```
 ┌─────────────┐      ┌──────────────────┐      ┌──────────────┐
 │   Client    │─────▶│  Facilitator API │◀─────│   Merchant   │
-│     SDK     │      │   (Backend)      │      │     SDK      │
+│     SDK     │      │   (Railway)      │      │     SDK      │
 └─────────────┘      └──────────────────┘      └──────────────┘
                               │
                               ▼
                         ┌──────────┐
                         │  Solana  │
-                        │ Blockchain│
+                        │  Devnet  │
                         └──────────┘
-```
-
-## 🔧 Development
-```bash
-# Install dependencies
-npm install
-
-# Start API server
-cd packages/facilitator-api
-npm run dev
-
-# Run demo
-cd examples/demo-merchant
-npm run demo
 ```
 
 ## 📖 API Endpoints
 
 ### POST /api/payment/create
 Create a new payment session
+
+**Request:**
+```json
+{
+  "merchantId": "merchant_123",
+  "amount": 10,
+  "reference": "order_456"
+}
+```
+
+**Response:**
+```json
+{
+  "sessionId": "uuid",
+  "depositAddress": "solana_address",
+  "amount": 10,
+  "feeAmount": 0.01,
+  "expiresAt": "2024-01-01T00:00:00Z"
+}
+```
 
 ### POST /api/payment/verify
 Verify payment completion
@@ -96,15 +119,48 @@ Settle payment to merchant
 ### GET /api/payment/status/:sessionId
 Get payment session status
 
+### GET /health
+Health check endpoint
+
 ## 🌟 Why Stakefy x402?
 
 | Feature | Stakefy x402 | PayAI |
 |---------|-------------|-------|
 | Open Source | ✅ | ❌ |
-| Fee | 0.5% | 1-2% |
-| Documentation | ✅ | Limited |
+| Fee | **0.1%** | 1-2% |
+| Documentation | Excellent | Limited |
 | Blockchain | Solana | Multiple |
-| SDK Quality | Excellent | Basic |
+| SDK Quality | Simple & Clean | Basic |
+
+## �� Development
+```bash
+# Clone the repo
+git clone https://github.com/JaspSoe/stakefy-x402.git
+cd stakefy-x402
+
+# Install dependencies
+npm install
+
+# Start API server locally
+cd packages/facilitator-api
+npm run dev
+
+# Run demo
+cd examples/demo-merchant
+npm run demo
+```
+
+## 🚀 Deployment
+
+The API is deployed on Railway. To deploy your own:
+
+1. Fork this repo
+2. Connect to Railway
+3. Set root directory to `packages/facilitator-api`
+4. Add environment variables:
+   - `SOLANA_RPC_URL`
+   - `USDC_MINT`
+   - `FEE_PERCENTAGE`
 
 ## 📝 License
 
@@ -116,6 +172,6 @@ Contributions welcome! Open an issue or PR.
 
 ## 🔗 Links
 
-- Documentation: Coming soon
-- Website: Coming soon
-- Twitter: Coming soon
+- **Live API**: https://stakefy-x402-production.up.railway.app
+- **GitHub**: https://github.com/JaspSoe/stakefy-x402
+- **Stakefy**: https://stakefy.io
