@@ -1,0 +1,26 @@
+{
+  "name": "stakefy-express-example",
+  "version": "1.0.0",
+  "description": "Express.js API example using x402-stakefy-sdk",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch index.ts",
+    "start": "tsx index.ts"
+  },
+  "keywords": ["express", "stakefy", "x402", "solana", "payments"],
+  "author": "stakefyx402",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.1",
+    "x402-stakefy-sdk": "^1.0.4",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.1",
+    "@types/cors": "^2.8.17",
+    "typescript": "^5.7.2",
+    "tsx": "^4.19.2"
+  }
+}
