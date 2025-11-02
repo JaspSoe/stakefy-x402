@@ -28,3 +28,31 @@ export interface SettleRequest {
   sessionId: string;
   merchantAddress: string;
 }
+
+export interface CreateBudgetRequest {
+  merchantId: string;
+  amount: number;
+  duration: number; // in seconds
+  userPublicKey: string;
+  metadata?: any;
+}
+
+export interface SessionBudget {
+  budgetId: string;
+  merchantId: string;
+  userPublicKey: string;
+  totalAmount: number;
+  remainingAmount: number;
+  feeAmount: number;
+  status: 'active' | 'depleted' | 'expired' | 'cancelled';
+  createdAt: Date;
+  expiresAt: Date;
+  metadata?: any;
+}
+
+export interface BudgetPaymentRequest {
+  budgetId: string;
+  amount: number;
+  reference: string;
+  metadata?: any;
+}

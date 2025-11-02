@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { SolanaService } from './solana';
 import { WebhookService, WebhookPayload } from './webhooks';
 import { QRCodeService } from './qrcode';
-import { PaymentRequest, PaymentSession, VerifyRequest, SettleRequest } from './types';
+import { PaymentRequest, PaymentSession, VerifyRequest, SettleRequest, CreateBudgetRequest, SessionBudget, BudgetPaymentRequest } from './types';
 import { config } from './config';
 
 const router = Router();
@@ -11,6 +11,9 @@ const solanaService = new SolanaService();
 const webhookService = new WebhookService();
 const qrCodeService = new QRCodeService();
 
+
+// Budget storage (replace with DB in production)
+const budgets = new Map<string, SessionBudget & { payments: string[] }>();
 // In-memory storage (replace with DB in production)
 const sessions = new Map<string, PaymentSession & { keypair: any }>();
 
@@ -214,6 +217,238 @@ router.post('/webhook/test', (req: Request, res: Response) => {
   console.log('📥 Webhook received:', req.body);
   console.log('📋 Headers:', req.headers);
   res.json({ received: true });
+});
+
+
+// Create session budget
+router.post('/budget/create', async (req: Request, res: Response) => {
+  try {
+    const { merchantId, amount, duration, userPublicKey, metadata }: CreateBudgetRequest = req.body;
+
+    if (!merchantId || !amount || !duration || !userPublicKey) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const budgetId = uuidv4();
+    const feeAmount = (amount * config.feePercentage) / 100;
+    const totalAmount = amount + feeAmount;
+
+    const budget: SessionBudget & { payments: string[] } = {
+      budgetId,
+      merchantId,
+      userPublicKey,
+      totalAmount,
+      remainingAmount: amount,
+      feeAmount,
+      status: 'active',
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + duration * 1000),
+      metadata,
+      payments: []
+    };
+
+    budgets.set(budgetId, budget);
+
+    res.json({
+      budgetId,
+      merchantId,
+      totalAmount,
+      remainingAmount: amount,
+      feeAmount,
+      status: 'active',
+      expiresAt: budget.expiresAt
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Make payment from budget
+router.post('/budget/payment', async (req: Request, res: Response) => {
+  try {
+    const { budgetId, amount, reference, metadata }: BudgetPaymentRequest = req.body;
+
+    if (!budgetId || !amount || !reference) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const budget = budgets.get(budgetId);
+    if (!budget) {
+      return res.status(404).json({ error: 'Budget not found' });
+    }
+
+    // Check budget status
+    if (budget.status !== 'active') {
+      return res.status(400).json({ error: `Budget is ${budget.status}` });
+    }
+
+    // Check expiration
+    if (new Date() > budget.expiresAt) {
+      budget.status = 'expired';
+      return res.status(400).json({ error: 'Budget has expired' });
+    }
+
+    // Check remaining balance
+    if (amount > budget.remainingAmount) {
+      return res.status(400).json({ 
+        error: 'Insufficient budget',
+        remainingAmount: budget.remainingAmount
+      });
+    }
+
+    // Deduct from budget
+    budget.remainingAmount -= amount;
+    
+    // Update status if depleted
+    if (budget.remainingAmount <= 0) {
+      budget.status = 'depleted';
+    }
+
+    // Track payment
+    budget.payments.push(reference);
+
+    res.json({
+      success: true,
+      budgetId,
+      amount,
+      reference,
+      remainingAmount: budget.remainingAmount,
+      status: budget.status
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get budget status
+router.get('/budget/:budgetId', (req: Request, res: Response) => {
+  const budget = budgets.get(req.params.budgetId);
+  if (!budget) {
+    return res.status(404).json({ error: 'Budget not found' });
+  }
+
+  // Auto-expire if needed
+  if (budget.status === 'active' && new Date() > budget.expiresAt) {
+    budget.status = 'expired';
+  }
+
+  const { payments, ...budgetData } = budget;
+  res.json({
+    ...budgetData,
+    paymentsCount: payments.length
+  });
+});
+
+// Create session budget
+router.post('/budget/create', async (req: Request, res: Response) => {
+  try {
+    const { merchantId, amount, duration, userPublicKey, metadata }: CreateBudgetRequest = req.body;
+
+    if (!merchantId || !amount || !duration || !userPublicKey) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const budgetId = uuidv4();
+    const feeAmount = (amount * config.feePercentage) / 100;
+    const totalAmount = amount + feeAmount;
+
+    const budget: SessionBudget & { payments: string[] } = {
+      budgetId,
+      merchantId,
+      userPublicKey,
+      totalAmount,
+      remainingAmount: amount,
+      feeAmount,
+      status: 'active',
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + duration * 1000),
+      metadata,
+      payments: []
+    };
+
+    budgets.set(budgetId, budget);
+
+    res.json({
+      budgetId,
+      merchantId,
+      totalAmount,
+      remainingAmount: amount,
+      feeAmount,
+      status: 'active',
+      expiresAt: budget.expiresAt
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Make payment from budget
+router.post('/budget/payment', async (req: Request, res: Response) => {
+  try {
+    const { budgetId, amount, reference, metadata }: BudgetPaymentRequest = req.body;
+
+    if (!budgetId || !amount || !reference) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const budget = budgets.get(budgetId);
+    if (!budget) {
+      return res.status(404).json({ error: 'Budget not found' });
+    }
+
+    if (budget.status !== 'active') {
+      return res.status(400).json({ error: `Budget is ${budget.status}` });
+    }
+
+    if (new Date() > budget.expiresAt) {
+      budget.status = 'expired';
+      return res.status(400).json({ error: 'Budget has expired' });
+    }
+
+    if (amount > budget.remainingAmount) {
+      return res.status(400).json({ 
+        error: 'Insufficient budget',
+        remainingAmount: budget.remainingAmount
+      });
+    }
+
+    budget.remainingAmount -= amount;
+    
+    if (budget.remainingAmount <= 0) {
+      budget.status = 'depleted';
+    }
+
+    budget.payments.push(reference);
+
+    res.json({
+      success: true,
+      budgetId,
+      amount,
+      reference,
+      remainingAmount: budget.remainingAmount,
+      status: budget.status
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get budget status
+router.get('/budget/:budgetId', (req: Request, res: Response) => {
+  const budget = budgets.get(req.params.budgetId);
+  if (!budget) {
+    return res.status(404).json({ error: 'Budget not found' });
+  }
+
+  if (budget.status === 'active' && new Date() > budget.expiresAt) {
+    budget.status = 'expired';
+  }
+
+  const { payments, ...budgetData } = budget;
+  res.json({
+    ...budgetData,
+    paymentsCount: payments.length
+  });
 });
 
 export default router;

@@ -16,3 +16,27 @@ export interface PaymentSession {
   feeAmount: number;
   expiresAt: string;
 }
+
+export interface BudgetOptions {
+  amount: number;
+  duration: number;
+  userPublicKey: string;
+  metadata?: any;
+}
+
+export interface Budget {
+  budgetId: string;
+  merchantId: string;
+  totalAmount: number;
+  remainingAmount: number;
+  feeAmount: number;
+  status: 'active' | 'depleted' | 'expired' | 'cancelled';
+  expiresAt: string;
+}
+
+export interface BudgetPaymentOptions {
+  budgetId: string;
+  amount: number;
+  reference: string;
+  metadata?: any;
+}

@@ -1,7 +1,6 @@
 import { Connection, PublicKey, Transaction, Keypair } from '@solana/web3.js';
 import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferInstruction } from '@solana/spl-token';
-import { X402Config, PaymentOptions, PaymentSession } from './types';
-
+import { X402Config, PaymentOptions, PaymentSession, BudgetOptions, Budget, BudgetPaymentOptions } from './types';
 export class StakefyX402Client {
   private config: X402Config;
   private connection: Connection;
@@ -90,6 +89,42 @@ export class StakefyX402Client {
 
   async getPaymentStatus(sessionId: string): Promise<PaymentSession> {
     const response = await fetch(`${this.config.facilitatorUrl}/api/payment/status/${sessionId}`);
+    return response.json();
+  }
+
+  async createBudget(options: BudgetOptions): Promise<Budget> {
+    const response = await fetch(`${this.config.facilitatorUrl}/api/budget/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        merchantId: this.config.merchantId,
+        ...options
+      })
+    });
+    if (!response.ok) {
+      throw new Error('Failed to create budget');
+    }
+    return response.json();
+  }
+
+  async payFromBudget(options: BudgetPaymentOptions): Promise<any> {
+    const response = await fetch(`${this.config.facilitatorUrl}/api/budget/payment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(options)
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to process budget payment');
+    }
+    return response.json();
+  }
+
+  async getBudgetStatus(budgetId: string): Promise<Budget> {
+    const response = await fetch(`${this.config.facilitatorUrl}/api/budget/${budgetId}`);
+    if (!response.ok) {
+      throw new Error('Failed to get budget status');
+    }
     return response.json();
   }
 }
