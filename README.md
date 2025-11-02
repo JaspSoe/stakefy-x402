@@ -8,53 +8,24 @@ Open-source x402 payment facilitator for Solana. Better than PayAI.
 
 - **0.1% fees** (vs PayAI's 1-2%)
 - **Open source** (vs closed)
-- **USDC payments** on Solana devnet
-- **Simple integration** with SDKs
+- **NPM packages** for easy integration
+- **USDC payments** on Solana
 - **Production ready**
 
-## 📦 Packages
+## 📦 Installation
+```bash
+# For clients/payers
+npm install stakefy-x402-client
 
-- `@stakefy-x402/facilitator-api` - Payment facilitator backend
-- `@stakefy-x402/client-sdk` - Client SDK for payers
-- `@stakefy-x402/merchant-sdk` - Merchant SDK for receivers
+# For merchants
+npm install stakefy-x402-merchant
+```
 
 ## 🚀 Quick Start
 
-### Test the API
-```bash
-# Health check
-curl https://stakefy-x402-production.up.railway.app/health
-
-# Create payment session
-curl -X POST https://stakefy-x402-production.up.railway.app/api/payment/create \
-  -H "Content-Type: application/json" \
-  -d '{
-    "merchantId": "your_merchant_id",
-    "amount": 10,
-    "reference": "order_123"
-  }'
-```
-
-### For Merchants
+### For Clients (Paying)
 ```typescript
-import { StakefyX402Merchant } from '@stakefy-x402/merchant-sdk';
-
-const merchant = new StakefyX402Merchant({
-  facilitatorUrl: 'https://stakefy-x402-production.up.railway.app',
-  merchantId: 'your_merchant_id',
-  merchantWallet: 'your_solana_wallet'
-});
-
-// Check payment status
-const status = await merchant.getPaymentStatus(sessionId);
-
-// Settle payment to your wallet
-const result = await merchant.settlePayment(sessionId);
-```
-
-### For Clients
-```typescript
-import { StakefyX402Client } from '@stakefy-x402/client-sdk';
+import { StakefyX402Client } from 'stakefy-x402-client';
 
 const client = new StakefyX402Client({
   facilitatorUrl: 'https://stakefy-x402-production.up.railway.app',
@@ -69,6 +40,23 @@ const session = await client.createPayment({
 
 // Pay with wallet
 const signature = await client.payWithWallet(session, payerKeypair);
+```
+
+### For Merchants (Receiving)
+```typescript
+import { StakefyX402Merchant } from 'stakefy-x402-merchant';
+
+const merchant = new StakefyX402Merchant({
+  facilitatorUrl: 'https://stakefy-x402-production.up.railway.app',
+  merchantId: 'your_merchant_id',
+  merchantWallet: 'your_solana_wallet'
+});
+
+// Check payment status
+const status = await merchant.getPaymentStatus(sessionId);
+
+// Settle to your wallet
+const result = await merchant.settlePayment(sessionId);
 ```
 
 ## 🏗️ Architecture
@@ -89,14 +77,14 @@ const signature = await client.payWithWallet(session, payerKeypair);
 
 ### POST /api/payment/create
 Create a new payment session
-
-**Request:**
-```json
-{
-  "merchantId": "merchant_123",
-  "amount": 10,
-  "reference": "order_456"
-}
+```bash
+curl -X POST https://stakefy-x402-production.up.railway.app/api/payment/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "merchantId": "merchant_123",
+    "amount": 10,
+    "reference": "order_456"
+  }'
 ```
 
 **Response:**
@@ -128,11 +116,17 @@ Health check endpoint
 |---------|-------------|-------|
 | Open Source | ✅ | ❌ |
 | Fee | **0.1%** | 1-2% |
+| NPM Packages | ✅ | ❌ |
 | Documentation | Excellent | Limited |
 | Blockchain | Solana | Multiple |
 | SDK Quality | Simple & Clean | Basic |
 
-## �� Development
+## 📦 NPM Packages
+
+- [`stakefy-x402-client`](https://www.npmjs.com/package/stakefy-x402-client) - Client SDK for payers
+- [`stakefy-x402-merchant`](https://www.npmjs.com/package/stakefy-x402-merchant) - Merchant SDK for receivers
+
+## 🔧 Development
 ```bash
 # Clone the repo
 git clone https://github.com/JaspSoe/stakefy-x402.git
@@ -150,9 +144,9 @@ cd examples/demo-merchant
 npm run demo
 ```
 
-## 🚀 Deployment
+## 🚀 Self-Hosting
 
-The API is deployed on Railway. To deploy your own:
+Deploy your own instance:
 
 1. Fork this repo
 2. Connect to Railway
@@ -174,4 +168,10 @@ Contributions welcome! Open an issue or PR.
 
 - **Live API**: https://stakefy-x402-production.up.railway.app
 - **GitHub**: https://github.com/JaspSoe/stakefy-x402
+- **NPM - Client**: https://www.npmjs.com/package/stakefy-x402-client
+- **NPM - Merchant**: https://www.npmjs.com/package/stakefy-x402-merchant
 - **Stakefy**: https://stakefy.io
+
+---
+
+**Built with ❤️ by the Stakefy team**
