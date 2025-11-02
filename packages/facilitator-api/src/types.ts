@@ -3,6 +3,7 @@ export interface PaymentRequest {
   amount: number;
   reference: string;
   metadata?: any;
+  webhookUrl?: string;
 }
 
 export interface PaymentSession {
@@ -15,11 +16,12 @@ export interface PaymentSession {
   depositAddress: string;
   createdAt: Date;
   expiresAt: Date;
+  webhookUrl?: string;
 }
 
 export interface VerifyRequest {
   sessionId: string;
-  signature: string;
+  signature?: string;
 }
 
 export interface SettleRequest {

@@ -1,10 +1,17 @@
 {
   "name": "stakefy-x402-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Client SDK for Stakefy x402 - 0.1% fee Solana payment facilitator",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "keywords": ["solana", "payment", "x402", "usdc", "stakefy", "crypto"],
+  "keywords": [
+    "solana",
+    "payment",
+    "x402",
+    "usdc",
+    "stakefy",
+    "crypto"
+  ],
   "author": "JaspSoe",
   "license": "MIT",
   "repository": {

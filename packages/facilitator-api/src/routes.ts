@@ -1,11 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { SolanaService } from './solana';
+import { WebhookService, WebhookPayload } from './webhooks';
 import { PaymentRequest, PaymentSession, VerifyRequest, SettleRequest } from './types';
 import { config } from './config';
 
 const router = Router();
 const solanaService = new SolanaService();
+const webhookService = new WebhookService();
 
 // In-memory storage (replace with DB in production)
 const sessions = new Map<string, PaymentSession & { keypair: any }>();
@@ -13,7 +15,7 @@ const sessions = new Map<string, PaymentSession & { keypair: any }>();
 // Create payment session
 router.post('/payment/create', async (req: Request, res: Response) => {
   try {
-    const { merchantId, amount, reference, metadata }: PaymentRequest = req.body;
+    const { merchantId, amount, reference, metadata, webhookUrl }: PaymentRequest = req.body;
 
     if (!merchantId || !amount || !reference) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -33,10 +35,29 @@ router.post('/payment/create', async (req: Request, res: Response) => {
       depositAddress: keypair.publicKey.toString(),
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 min expiry
-      keypair: Array.from(keypair.secretKey), // Store for settlement
+      webhookUrl,
+      keypair: Array.from(keypair.secretKey),
     };
 
     sessions.set(sessionId, session);
+
+    // Send webhook for payment.created
+    if (webhookUrl) {
+      const payload: WebhookPayload = {
+        event: 'payment.created',
+        sessionId,
+        merchantId,
+        amount,
+        feeAmount,
+        status: 'pending',
+        timestamp: new Date().toISOString(),
+        depositAddress: session.depositAddress
+      };
+      
+      webhookService.sendWebhook(webhookUrl, payload).catch(err => 
+        console.error('Webhook error:', err)
+      );
+    }
 
     const { keypair: _, ...sessionResponse } = session;
     res.json(sessionResponse);
@@ -60,8 +81,25 @@ router.post('/payment/verify', async (req: Request, res: Response) => {
       session.amount + session.feeAmount
     );
 
-    if (isPaid) {
+    if (isPaid && session.status === 'pending') {
       session.status = 'completed';
+      
+      // Send webhook for payment.completed
+      if (session.webhookUrl) {
+        const payload: WebhookPayload = {
+          event: 'payment.completed',
+          sessionId,
+          merchantId: session.merchantId,
+          amount: session.amount,
+          feeAmount: session.feeAmount,
+          status: 'completed',
+          timestamp: new Date().toISOString()
+        };
+        
+        webhookService.sendWebhook(session.webhookUrl, payload).catch(err =>
+          console.error('Webhook error:', err)
+        );
+      }
     }
 
     res.json({ 
@@ -120,6 +158,13 @@ router.get('/payment/status/:sessionId', (req: Request, res: Response) => {
 
   const { keypair, ...sessionData } = session;
   res.json(sessionData);
+});
+
+// Webhook endpoint for testing
+router.post('/webhook/test', (req: Request, res: Response) => {
+  console.log('📥 Webhook received:', req.body);
+  console.log('📋 Headers:', req.headers);
+  res.json({ received: true });
 });
 
 export default router;

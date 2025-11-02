@@ -1,10 +1,18 @@
 {
   "name": "stakefy-x402-merchant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Merchant SDK for Stakefy x402 - 0.1% fee Solana payment facilitator",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "keywords": ["solana", "payment", "x402", "usdc", "stakefy", "merchant", "crypto"],
+  "keywords": [
+    "solana",
+    "payment",
+    "x402",
+    "usdc",
+    "stakefy",
+    "merchant",
+    "crypto"
+  ],
   "author": "JaspSoe",
   "license": "MIT",
   "repository": {
