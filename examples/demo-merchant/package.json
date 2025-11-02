@@ -1,0 +1,16 @@
+{
+  "name": "demo-merchant",
+  "version": "1.0.0",
+  "scripts": {
+    "demo": "ts-node src/demo.ts"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.87.6",
+    "@solana/spl-token": "^0.3.9"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.5",
+    "ts-node": "^10.9.2"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "stakefy-x402",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "turbo": "^2.6.0",
+    "typescript": "^5.9.3"
+  }
+}
