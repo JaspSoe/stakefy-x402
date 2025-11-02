@@ -1,7 +1,7 @@
 import { Connection, PublicKey, Transaction, Keypair } from '@solana/web3.js';
 import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferInstruction } from '@solana/spl-token';
 import { createPaymentHeader, selectPaymentRequirements, verify } from 'x402';
-import { X402Config, PaymentOptions, PaymentSession, BudgetOptions, Budget, BudgetPaymentOptions } from './types';
+import { X402Config, PaymentOptions, PaymentSession, BudgetOptions, Budget, BudgetPaymentOptions, RegisterUsernameOptions, UserProfile, PayToUsernameOptions } from './types';
 export class StakefyX402Client {
   private config: X402Config;
   private connection: Connection;
@@ -125,6 +125,48 @@ export class StakefyX402Client {
     const response = await fetch(`${this.config.facilitatorUrl}/api/budget/${budgetId}`);
     if (!response.ok) {
       throw new Error('Failed to get budget status');
+    }
+    return response.json();
+  }
+
+  async registerUsername(options: RegisterUsernameOptions): Promise<any> {
+    const response = await fetch(`${this.config.facilitatorUrl}/api/username/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(options)
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to register username');
+    }
+    return response.json();
+  }
+
+  async getUserProfile(username: string): Promise<UserProfile> {
+    const response = await fetch(`${this.config.facilitatorUrl}/api/username/${username}`);
+    if (!response.ok) {
+      throw new Error('Username not found');
+    }
+    return response.json();
+  }
+
+  async getProfileByPublicKey(publicKey: string): Promise<UserProfile> {
+    const response = await fetch(`${this.config.facilitatorUrl}/api/publickey/${publicKey}`);
+    if (!response.ok) {
+      throw new Error('No username found for this public key');
+    }
+    return response.json();
+  }
+
+  async payToUsername(options: PayToUsernameOptions): Promise<any> {
+    const response = await fetch(`${this.config.facilitatorUrl}/api/username/pay`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(options)
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create payment');
     }
     return response.json();
   }
