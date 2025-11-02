@@ -1,6 +1,6 @@
 {
   "name": "x402-stakefy-sdk",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Feature-rich Solana x402 payment SDK with payment channels, @username system, session budgets, and merchant tools. Better than alternatives with 0.1% fees.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

@@ -1,285 +1,109 @@
 # x402-stakefy-react
 
-🚀 **React hooks for Stakefy x402 payments** - Better than PayAI, 100% open source.
+[![NPM Version](https://img.shields.io/npm/v/x402-stakefy-react.svg)](https://www.npmjs.com/package/x402-stakefy-react)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Installation
+React hooks for Stakefy x402 payments on Solana.
+
+> **🏠 Main Documentation:** [github.com/JaspSoe/stakefy-x402](https://github.com/JaspSoe/stakefy-x402)
+
+## 📦 Stakefy Ecosystem
+
+This is part of the complete Stakefy payment infrastructure:
+
+| Package | Description | NPM |
+|---------|-------------|-----|
+| **x402-stakefy-sdk** | Core SDK | [![npm](https://img.shields.io/npm/v/x402-stakefy-sdk)](https://npmjs.com/package/x402-stakefy-sdk) |
+| **x402-stakefy-react** | React hooks (this package) | [![npm](https://img.shields.io/npm/v/x402-stakefy-react)](https://npmjs.com/package/x402-stakefy-react) |
+| **stakefy-express** | Express middleware | [![npm](https://img.shields.io/npm/v/stakefy-express)](https://npmjs.com/package/stakefy-express) |
+
+## 🚀 Quick Start
 ```bash
-npm install x402-stakefy-react x402-stakefy-sdk
+npm install x402-stakefy-react x402-stakefy-sdk @solana/wallet-adapter-react
 ```
-
-## Quick Start
-```tsx
-import { StakefyProvider, StakefyX402Client } from 'x402-stakefy-react';
-
-// Create client
-const client = new StakefyX402Client({
-  apiUrl: 'https://stakefy-x402-production.up.railway.app',
-  network: 'devnet',
-});
-
-// Wrap your app
-function App() {
-  return (
-    <StakefyProvider client={client}>
-      <YourApp />
-    </StakefyProvider>
-  );
-}
-```
-
-## Hooks
-
-### useStakefyPayment
-```tsx
-import { useStakefyClient, useStakefyPayment } from 'x402-stakefy-react';
-
-function PaymentButton() {
-  const client = useStakefyClient();
-  const { createPayment, loading, error, payment } = useStakefyPayment({ client });
-
-  const handlePay = async () => {
-    const result = await createPayment({
-      amount: 10,
-      merchantId: 'merchant-123',
-      reference: 'order-456',
-    });
-    
-    console.log(result.qrCode); // Display QR code
-    console.log(result.solanaPayUrl); // Solana Pay URL
-  };
-
-  return (
-    <button onClick={handlePay} disabled={loading}>
-      {loading ? 'Processing...' : 'Pay 10 USDC'}
-    </button>
-  );
-}
-```
-
-### useSessionBudget
-```tsx
-import { useStakefyClient, useSessionBudget } from 'x402-stakefy-react';
-
-function BudgetPayments() {
-  const client = useStakefyClient();
-  const { createBudget, makeBudgetPayment, budget, loading } = useSessionBudget({ client });
-
-  const setupBudget = async () => {
-    await createBudget({
-      amount: 100,
-      duration: 3600, // 1 hour
-      userPublicKey: 'user-wallet-address',
-      merchantId: 'merchant-123',
-    });
-  };
-
-  const pay = async () => {
-    // No wallet popup!
-    await makeBudgetPayment({
-      budgetId: budget!.budgetId,
-      amount: 5,
-      reference: 'purchase-1',
-    });
-  };
-
-  return (
-    <div>
-      {!budget ? (
-        <button onClick={setupBudget}>Create Budget</button>
-      ) : (
-        <>
-          <p>Remaining: {budget.remainingAmount} USDC</p>
-          <button onClick={pay} disabled={loading}>
-            Pay 5 USDC (No Popup!)
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
-```
-
-### useUsername
-```tsx
-import { useStakefyClient, useUsername } from 'x402-stakefy-react';
-
-function UsernamePayment() {
-  const client = useStakefyClient();
-  const { registerUsername, payToUsername, getUserProfile, profile, loading } = useUsername({ client });
-
-  const register = async () => {
-    await registerUsername({
-      username: 'alice',
-      publicKey: 'wallet-address',
-    });
-  };
-
-  const pay = async () => {
-    await payToUsername({
-      username: 'alice',
-      amount: 25,
-      reference: 'tip-001',
-    });
-  };
-
-  return (
-    <div>
-      <button onClick={register}>Register @username</button>
-      <button onClick={pay}>Pay to @alice</button>
-      {profile && <p>Reputation: {profile.reputation}</p>}
-    </div>
-  );
-}
-```
-
-### usePaymentChannel
-```tsx
-import { useStakefyClient, usePaymentChannel } from 'x402-stakefy-react';
-
-function MicroPayments() {
-  const client = useStakefyClient();
-  const { createChannel, makeChannelPayment, settleChannel, channel, loading } = usePaymentChannel({ client });
-
-  const openChannel = async () => {
-    await createChannel({
-      depositAmount: 100,
-      duration: 86400, // 24 hours
-      userPublicKey: 'user-wallet',
-      merchantId: 'merchant-123',
-    });
-  };
-
-  const payOffChain = async () => {
-    // Instant, no blockchain tx!
-    await makeChannelPayment({
-      channelId: channel!.channelId,
-      amount: 1,
-      nonce: 1,
-      signature: 'signed-data',
-      reference: 'micro-tx-1',
-    });
-  };
-
-  const settle = async () => {
-    // Batch 100 payments into 1 blockchain tx
-    await settleChannel(channel!.channelId, 'merchant-wallet');
-  };
-
-  return (
-    <div>
-      {!channel ? (
-        <button onClick={openChannel}>Open Channel</button>
-      ) : (
-        <>
-          <p>Balance: {channel.remainingBalance} USDC</p>
-          <button onClick={payOffChain}>Pay 1 USDC (Off-Chain)</button>
-          <button onClick={settle}>Settle On-Chain</button>
-        </>
-      )}
-    </div>
-  );
-}
-```
-
-## Features
-
-✅ **useStakefyPayment** - Create and verify payments  
-✅ **useSessionBudget** - Pre-approved spending (no popups!)  
-✅ **useUsername** - Pay to @username instead of addresses  
-✅ **usePaymentChannel** - Off-chain micro-payments  
-✅ **Full TypeScript support**  
-✅ **Automatic state management**  
-✅ **Error handling built-in**
-
-## Why Stakefy React Hooks?
-
-- 🎣 **Modern React patterns** - Hooks-first API
-- 🔄 **Auto state sync** - No manual state management
-- 💪 **TypeScript native** - Full type safety
-- ⚡ **0.1% fees** (vs PayAI's 1-2%)
-- 🚀 **Better DX** - Cleaner than PayAI's API
-
-## Links
-
-- 📦 [Core SDK](https://npmjs.com/package/x402-stakefy-sdk)
-- 🔗 [GitHub](https://github.com/JaspSoe/stakefy-x402)
-- 📖 [Documentation](https://docs.stakefy.io)
-
-## License
-
-MIT - Built with ❤️ by the Stakefy team
-
-## 🔒 usePaywall - Content Paywall Hook
-
-Lock content behind payments with automatic access management.
-
-### Installation
-```bash
-npm install x402-stakefy-react @solana/wallet-adapter-react @solana/web3.js
-```
-
-### Usage
 ```tsx
 import { usePaywall } from 'x402-stakefy-react';
 
-function PremiumArticle() {
+function PremiumContent() {
   const paywall = usePaywall({
-    contentId: 'article-123',
+    contentId: 'premium-article',
     amount: 0.01,
-    merchantId: 'YOUR_MERCHANT_WALLET',
-    title: 'Premium Article',
-    description: 'Unlock premium content for 0.01 SOL'
+    merchantId: 'YOUR_WALLET'
   });
-
-  if (paywall.loading) {
-    return <div>Checking access...</div>;
-  }
 
   if (!paywall.hasAccess) {
     return (
-      <div className="paywall">
-        <h2>🔒 Premium Content</h2>
-        <p>{paywall.description}</p>
-        <button 
-          onClick={paywall.unlock} 
-          disabled={paywall.paying}
-        >
-          {paywall.paying ? 'Processing...' : `Unlock for ${paywall.amount} SOL`}
-        </button>
-        {paywall.error && (
-          <p className="error">{paywall.error.message}</p>
-        )}
-      </div>
+      <button onClick={paywall.unlock} disabled={paywall.paying}>
+        {paywall.paying ? 'Processing...' : 'Unlock for 0.01 SOL'}
+      </button>
     );
   }
 
-  return (
-    <article>
-      <h1>Premium Article Content</h1>
-      <p>You have access! Here's the premium content...</p>
-    </article>
-  );
+  return <div>Premium content here!</div>;
 }
 ```
 
-### Features
+## ✨ Available Hooks
 
-- ✅ Automatic access tracking (localStorage)
-- ✅ Wallet-based authentication
-- ✅ Payment state management
-- ✅ Error handling built-in
-- ✅ Works with any Solana wallet
+- ✅ `useStakefyPayment` - Simple payments
+- ✅ `usePaywall` - Content paywalls
+- ✅ `useSessionBudget` - Budget management
+- ✅ `usePaymentChannel` - Channel state
+- ✅ `useUsername` - Username resolution
 
-### API
-```typescript
-const {
-  hasAccess,    // boolean - does user have access?
-  loading,      // boolean - checking access?
-  paying,       // boolean - payment in progress?
-  error,        // Error | null - any errors
-  payment,      // PaymentResponse | null - payment details
-  unlock,       // () => Promise<void> - trigger payment
-  checkAccess   // () => Promise<boolean> - re-check access
-} = usePaywall(config);
+## 🎯 Examples
+
+### Content Paywall
+```tsx
+const paywall = usePaywall({
+  contentId: 'article-123',
+  amount: 0.01,
+  merchantId: 'publisher-wallet'
+});
 ```
 
+### Simple Payment
+```tsx
+const { pay, loading, error } = useStakefyPayment();
+
+await pay({
+  amount: 0.5,
+  merchantId: 'merchant-wallet',
+  memo: 'Coffee payment'
+});
+```
+
+### Session Budget
+```tsx
+const { session, pay } = useSessionBudget({
+  budget: 1.0,
+  duration: 3600,
+  merchantId: 'merchant-id'
+});
+```
+
+## 📖 Full Documentation
+
+For complete documentation, API reference, and more examples:
+
+👉 **[Complete Documentation](https://github.com/JaspSoe/stakefy-x402)**
+
+Includes:
+- All hook APIs
+- Error handling
+- TypeScript types
+- Advanced examples
+- Best practices
+
+## 🔗 Links
+
+- **Main Docs:** https://github.com/JaspSoe/stakefy-x402
+- **Core SDK:** https://npmjs.com/package/x402-stakefy-sdk
+- **Express Package:** https://npmjs.com/package/stakefy-express
+- **Facilitator API:** https://stakefy-x402-production.up.railway.app
+- **Twitter:** [@stakefy](https://twitter.com/stakefy)
+- **Email:** sayhello@stakefy.io
+
+## 📄 License
+
+MIT © Stakefy

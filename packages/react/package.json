@@ -1,6 +1,6 @@
 {
   "name": "x402-stakefy-react",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React hooks for Stakefy x402 payments - Better than PayAI",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
