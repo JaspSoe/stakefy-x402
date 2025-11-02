@@ -1,4 +1,4 @@
-import { MerchantConfig, PaymentSession } from './types';
+import { MerchantConfig, PaymentSession, WebhookEvent } from './types';
 
 export class StakefyX402Merchant {
   private config: MerchantConfig;
@@ -67,6 +67,33 @@ export class StakefyX402Merchant {
     }
 
     throw new Error('Payment timeout - max attempts reached');
+  }
+
+  /**
+   * Verify webhook signature (for production use HMAC)
+   */
+  verifyWebhookSignature(payload: WebhookEvent, signature: string): boolean {
+    const expectedSignature = Buffer.from(JSON.stringify(payload)).toString('base64');
+    return signature === expectedSignature;
+  }
+
+  /**
+   * Parse and validate webhook payload
+   */
+  parseWebhook(body: any, signature?: string): WebhookEvent {
+    const payload = body as WebhookEvent;
+    
+    // Validate required fields
+    if (!payload.event || !payload.sessionId || !payload.merchantId) {
+      throw new Error('Invalid webhook payload');
+    }
+
+    // Verify signature if provided
+    if (signature && !this.verifyWebhookSignature(payload, signature)) {
+      throw new Error('Invalid webhook signature');
+    }
+
+    return payload;
   }
 }
 

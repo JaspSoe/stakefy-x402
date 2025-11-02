@@ -1,6 +1,6 @@
 {
   "name": "stakefy-x402-merchant",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Merchant SDK for Stakefy x402 - 0.1% fee Solana payment facilitator",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
