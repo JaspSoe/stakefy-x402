@@ -1,16 +1,24 @@
 {
   "name": "x402-stakefy-react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React hooks for Stakefy x402 payments - Better than PayAI",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.tsx --format cjs,esm --dts --external react",
-    "dev": "tsup src/index.tsx --format cjs,esm --dts --external react --watch",
+    "build": "tsup src/index.tsx --format cjs,esm --dts --external react --external @solana/wallet-adapter-react --external @solana/web3.js",
+    "dev": "tsup src/index.tsx --format cjs,esm --dts --external react --external @solana/wallet-adapter-react --external @solana/web3.js --watch",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["react", "hooks", "solana", "x402", "payments", "stakefy", "web3"],
+  "keywords": [
+    "react",
+    "hooks",
+    "solana",
+    "x402",
+    "payments",
+    "stakefy",
+    "web3"
+  ],
   "author": "stakefyx402",
   "license": "MIT",
   "homepage": "https://github.com/JaspSoe/stakefy-x402#readme",
@@ -20,14 +28,18 @@
     "directory": "packages/react"
   },
   "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0"
+    "react": "^18.0.0 || ^19.0.0",
+    "@solana/wallet-adapter-react": "^0.15.0",
+    "@solana/web3.js": "^1.95.0"
   },
   "dependencies": {
-    "x402-stakefy-sdk": "^1.0.0"
+    "x402-stakefy-sdk": "^1.0.5"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
     "@types/node": "^22.10.1",
+    "@solana/wallet-adapter-react": "^0.15.35",
+    "@solana/web3.js": "^1.95.8",
     "react": "^18.3.1",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2"

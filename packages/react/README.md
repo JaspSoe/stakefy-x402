@@ -208,3 +208,78 @@ function MicroPayments() {
 ## License
 
 MIT - Built with ❤️ by the Stakefy team
+
+## 🔒 usePaywall - Content Paywall Hook
+
+Lock content behind payments with automatic access management.
+
+### Installation
+```bash
+npm install x402-stakefy-react @solana/wallet-adapter-react @solana/web3.js
+```
+
+### Usage
+```tsx
+import { usePaywall } from 'x402-stakefy-react';
+
+function PremiumArticle() {
+  const paywall = usePaywall({
+    contentId: 'article-123',
+    amount: 0.01,
+    merchantId: 'YOUR_MERCHANT_WALLET',
+    title: 'Premium Article',
+    description: 'Unlock premium content for 0.01 SOL'
+  });
+
+  if (paywall.loading) {
+    return <div>Checking access...</div>;
+  }
+
+  if (!paywall.hasAccess) {
+    return (
+      <div className="paywall">
+        <h2>🔒 Premium Content</h2>
+        <p>{paywall.description}</p>
+        <button 
+          onClick={paywall.unlock} 
+          disabled={paywall.paying}
+        >
+          {paywall.paying ? 'Processing...' : `Unlock for ${paywall.amount} SOL`}
+        </button>
+        {paywall.error && (
+          <p className="error">{paywall.error.message}</p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <article>
+      <h1>Premium Article Content</h1>
+      <p>You have access! Here's the premium content...</p>
+    </article>
+  );
+}
+```
+
+### Features
+
+- ✅ Automatic access tracking (localStorage)
+- ✅ Wallet-based authentication
+- ✅ Payment state management
+- ✅ Error handling built-in
+- ✅ Works with any Solana wallet
+
+### API
+```typescript
+const {
+  hasAccess,    // boolean - does user have access?
+  loading,      // boolean - checking access?
+  paying,       // boolean - payment in progress?
+  error,        // Error | null - any errors
+  payment,      // PaymentResponse | null - payment details
+  unlock,       // () => Promise<void> - trigger payment
+  checkAccess   // () => Promise<boolean> - re-check access
+} = usePaywall(config);
+```
+
