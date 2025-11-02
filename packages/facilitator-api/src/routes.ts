@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { SolanaService } from './solana';
 import { WebhookService, WebhookPayload } from './webhooks';
 import { QRCodeService } from './qrcode';
-import { PaymentRequest, PaymentSession, VerifyRequest, SettleRequest, CreateBudgetRequest, SessionBudget, BudgetPaymentRequest, CreateUsernameRequest, UserProfile, UsernamePaymentRequest } from './types';
+import { PaymentRequest, PaymentSession, VerifyRequest, SettleRequest, CreateBudgetRequest, SessionBudget, BudgetPaymentRequest, CreateUsernameRequest, UserProfile, UsernamePaymentRequest, CreateChannelRequest, PaymentChannel, ChannelPaymentRequest, SettleChannelRequest } from './types';
 import { config } from './config';
 import { verify as x402Verify, Supported } from 'x402';
 
@@ -18,6 +18,9 @@ const budgets = new Map<string, SessionBudget & { payments: string[] }>();
 
 // Username storage (replace with DB in production)
 const usernames = new Map<string, UserProfile>();
+
+// Payment channels storage (replace with DB in production)
+const channels = new Map<string, PaymentChannel & { payments: Array<{amount: number, reference: string, timestamp: Date}> }>();
 const publicKeyToUsername = new Map<string, string>();
 // In-memory storage (replace with DB in production)
 const sessions = new Map<string, PaymentSession & { keypair: any }>();
@@ -655,5 +658,349 @@ function updateReputation(username: string, success: boolean, amount: number) {
     profile.reputation = Math.max(0, profile.reputation - 10);
   }
 }
+
+
+// Create payment channel
+router.post('/channel/create', async (req: Request, res: Response) => {
+  try {
+    const { userPublicKey, merchantId, depositAmount, duration, metadata }: CreateChannelRequest = req.body;
+
+    if (!userPublicKey || !merchantId || !depositAmount || !duration) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const channelId = uuidv4();
+    const feeAmount = (depositAmount * config.feePercentage) / 100;
+
+    const channel: PaymentChannel & { payments: Array<{amount: number, reference: string, timestamp: Date}> } = {
+      channelId,
+      userPublicKey,
+      merchantId,
+      depositAmount,
+      withdrawnAmount: 0,
+      remainingBalance: depositAmount,
+      status: 'open',
+      nonce: 0,
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + duration * 1000),
+      metadata,
+      payments: []
+    };
+
+    channels.set(channelId, channel);
+
+    res.json({
+      channelId,
+      userPublicKey,
+      merchantId,
+      depositAmount,
+      remainingBalance: depositAmount,
+      status: 'open',
+      nonce: 0,
+      expiresAt: channel.expiresAt,
+      message: 'Channel created. Deposit funds on-chain to activate.'
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Make payment from channel (off-chain)
+router.post('/channel/payment', (req: Request, res: Response) => {
+  try {
+    const { channelId, amount, nonce, signature, reference, metadata }: ChannelPaymentRequest = req.body;
+
+    if (!channelId || !amount || nonce === undefined || !signature || !reference) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const channel = channels.get(channelId);
+    if (!channel) {
+      return res.status(404).json({ error: 'Channel not found' });
+    }
+
+    // Check channel status
+    if (channel.status !== 'open') {
+      return res.status(400).json({ error: `Channel is ${channel.status}` });
+    }
+
+    // Check expiration
+    if (new Date() > channel.expiresAt) {
+      channel.status = 'closed';
+      return res.status(400).json({ error: 'Channel has expired' });
+    }
+
+    // Verify nonce (must be greater than last nonce to prevent replay)
+    if (nonce <= channel.nonce) {
+      return res.status(400).json({ error: 'Invalid nonce. Must be greater than last nonce.' });
+    }
+
+    // Check balance
+    const newWithdrawn = channel.withdrawnAmount + amount;
+    if (newWithdrawn > channel.depositAmount) {
+      return res.status(400).json({ 
+        error: 'Insufficient channel balance',
+        remainingBalance: channel.remainingBalance
+      });
+    }
+
+    // TODO: Verify signature in production
+    // Should verify: sign(channelId + amount + nonce) === signature
+
+    // Update channel state (off-chain)
+    channel.withdrawnAmount = newWithdrawn;
+    channel.remainingBalance = channel.depositAmount - newWithdrawn;
+    channel.nonce = nonce;
+    channel.payments.push({
+      amount,
+      reference,
+      timestamp: new Date()
+    });
+
+    res.json({
+      success: true,
+      channelId,
+      amount,
+      reference,
+      withdrawnAmount: channel.withdrawnAmount,
+      remainingBalance: channel.remainingBalance,
+      nonce: channel.nonce,
+      paymentsCount: channel.payments.length
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get channel status
+router.get('/channel/:channelId', (req: Request, res: Response) => {
+  const channel = channels.get(req.params.channelId);
+  if (!channel) {
+    return res.status(404).json({ error: 'Channel not found' });
+  }
+
+  // Auto-close if expired
+  if (channel.status === 'open' && new Date() > channel.expiresAt) {
+    channel.status = 'closed';
+  }
+
+  const { payments, ...channelData } = channel;
+  res.json({
+    ...channelData,
+    paymentsCount: payments.length,
+    totalProcessed: channel.withdrawnAmount
+  });
+});
+
+// Settle channel on-chain
+router.post('/channel/settle', async (req: Request, res: Response) => {
+  try {
+    const { channelId, merchantAddress }: SettleChannelRequest = req.body;
+
+    if (!channelId || !merchantAddress) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const channel = channels.get(channelId);
+    if (!channel) {
+      return res.status(404).json({ error: 'Channel not found' });
+    }
+
+    if (channel.status === 'settled') {
+      return res.status(400).json({ error: 'Channel already settled' });
+    }
+
+    // In production: execute on-chain settlement here
+    // Transfer channel.withdrawnAmount to merchant
+    // Return remaining balance to user
+
+    channel.status = 'settled';
+    channel.settledAt = new Date();
+
+    res.json({
+      success: true,
+      channelId,
+      withdrawnAmount: channel.withdrawnAmount,
+      returnedToUser: channel.remainingBalance,
+      paymentsProcessed: channel.payments.length,
+      settledAt: channel.settledAt,
+      message: 'Channel settled on-chain'
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// Create payment channel
+router.post('/channel/create', async (req: Request, res: Response) => {
+  try {
+    const { userPublicKey, merchantId, depositAmount, duration, metadata }: CreateChannelRequest = req.body;
+
+    if (!userPublicKey || !merchantId || !depositAmount || !duration) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const channelId = uuidv4();
+    const feeAmount = (depositAmount * config.feePercentage) / 100;
+
+    const channel: PaymentChannel & { payments: Array<{amount: number, reference: string, timestamp: Date}> } = {
+      channelId,
+      userPublicKey,
+      merchantId,
+      depositAmount,
+      withdrawnAmount: 0,
+      remainingBalance: depositAmount,
+      status: 'open',
+      nonce: 0,
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + duration * 1000),
+      metadata,
+      payments: []
+    };
+
+    channels.set(channelId, channel);
+
+    res.json({
+      channelId,
+      userPublicKey,
+      merchantId,
+      depositAmount,
+      remainingBalance: depositAmount,
+      status: 'open',
+      nonce: 0,
+      expiresAt: channel.expiresAt,
+      message: 'Channel created. Deposit funds on-chain to activate.'
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Make payment from channel (off-chain)
+router.post('/channel/payment', (req: Request, res: Response) => {
+  try {
+    const { channelId, amount, nonce, signature, reference, metadata }: ChannelPaymentRequest = req.body;
+
+    if (!channelId || !amount || nonce === undefined || !signature || !reference) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const channel = channels.get(channelId);
+    if (!channel) {
+      return res.status(404).json({ error: 'Channel not found' });
+    }
+
+    // Check channel status
+    if (channel.status !== 'open') {
+      return res.status(400).json({ error: `Channel is ${channel.status}` });
+    }
+
+    // Check expiration
+    if (new Date() > channel.expiresAt) {
+      channel.status = 'closed';
+      return res.status(400).json({ error: 'Channel has expired' });
+    }
+
+    // Verify nonce (must be greater than last nonce to prevent replay)
+    if (nonce <= channel.nonce) {
+      return res.status(400).json({ error: 'Invalid nonce. Must be greater than last nonce.' });
+    }
+
+    // Check balance
+    const newWithdrawn = channel.withdrawnAmount + amount;
+    if (newWithdrawn > channel.depositAmount) {
+      return res.status(400).json({ 
+        error: 'Insufficient channel balance',
+        remainingBalance: channel.remainingBalance
+      });
+    }
+
+    // TODO: Verify signature in production
+    // Should verify: sign(channelId + amount + nonce) === signature
+
+    // Update channel state (off-chain)
+    channel.withdrawnAmount = newWithdrawn;
+    channel.remainingBalance = channel.depositAmount - newWithdrawn;
+    channel.nonce = nonce;
+    channel.payments.push({
+      amount,
+      reference,
+      timestamp: new Date()
+    });
+
+    res.json({
+      success: true,
+      channelId,
+      amount,
+      reference,
+      withdrawnAmount: channel.withdrawnAmount,
+      remainingBalance: channel.remainingBalance,
+      nonce: channel.nonce,
+      paymentsCount: channel.payments.length
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get channel status
+router.get('/channel/:channelId', (req: Request, res: Response) => {
+  const channel = channels.get(req.params.channelId);
+  if (!channel) {
+    return res.status(404).json({ error: 'Channel not found' });
+  }
+
+  // Auto-close if expired
+  if (channel.status === 'open' && new Date() > channel.expiresAt) {
+    channel.status = 'closed';
+  }
+
+  const { payments, ...channelData } = channel;
+  res.json({
+    ...channelData,
+    paymentsCount: payments.length,
+    totalProcessed: channel.withdrawnAmount
+  });
+});
+
+// Settle channel on-chain
+router.post('/channel/settle', async (req: Request, res: Response) => {
+  try {
+    const { channelId, merchantAddress }: SettleChannelRequest = req.body;
+
+    if (!channelId || !merchantAddress) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const channel = channels.get(channelId);
+    if (!channel) {
+      return res.status(404).json({ error: 'Channel not found' });
+    }
+
+    if (channel.status === 'settled') {
+      return res.status(400).json({ error: 'Channel already settled' });
+    }
+
+    // In production: execute on-chain settlement here
+    // Transfer channel.withdrawnAmount to merchant
+    // Return remaining balance to user
+
+    channel.status = 'settled';
+    channel.settledAt = new Date();
+
+    res.json({
+      success: true,
+      channelId,
+      withdrawnAmount: channel.withdrawnAmount,
+      returnedToUser: channel.remainingBalance,
+      paymentsProcessed: channel.payments.length,
+      settledAt: channel.settledAt,
+      message: 'Channel settled on-chain'
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 export default router;

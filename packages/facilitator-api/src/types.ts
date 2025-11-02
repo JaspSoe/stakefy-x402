@@ -82,3 +82,40 @@ export interface UsernamePaymentRequest {
   reference: string;
   metadata?: any;
 }
+
+export interface CreateChannelRequest {
+  userPublicKey: string;
+  merchantId: string;
+  depositAmount: number;
+  duration: number; // in seconds
+  metadata?: any;
+}
+
+export interface PaymentChannel {
+  channelId: string;
+  userPublicKey: string;
+  merchantId: string;
+  depositAmount: number;
+  withdrawnAmount: number;
+  remainingBalance: number;
+  status: 'open' | 'closed' | 'settled';
+  nonce: number; // prevents replay attacks
+  createdAt: Date;
+  expiresAt: Date;
+  settledAt?: Date;
+  metadata?: any;
+}
+
+export interface ChannelPaymentRequest {
+  channelId: string;
+  amount: number;
+  nonce: number;
+  signature: string; // User signs: channelId + amount + nonce
+  reference: string;
+  metadata?: any;
+}
+
+export interface SettleChannelRequest {
+  channelId: string;
+  merchantAddress: string;
+}
