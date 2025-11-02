@@ -5,6 +5,7 @@ import { WebhookService, WebhookPayload } from './webhooks';
 import { QRCodeService } from './qrcode';
 import { PaymentRequest, PaymentSession, VerifyRequest, SettleRequest, CreateBudgetRequest, SessionBudget, BudgetPaymentRequest } from './types';
 import { config } from './config';
+import { verify as x402Verify, Supported } from 'x402';
 
 const router = Router();
 const solanaService = new SolanaService();
@@ -449,6 +450,48 @@ router.get('/budget/:budgetId', (req: Request, res: Response) => {
     ...budgetData,
     paymentsCount: payments.length
   });
+});
+
+
+// Get supported x402 schemes and networks
+router.get('/supported', (req: Request, res: Response) => {
+  const supported: Supported = {
+    x402Version: 1,
+    kind: [
+      {
+        scheme: 'exact',
+        networkId: 'solana-devnet',
+        extra: {
+          fees: '0.1%',
+          minAmount: '0.01',
+          maxAmount: '10000',
+          supportedTokens: ['USDC']
+        }
+      }
+    ]
+  };
+  res.json(supported);
+});
+
+
+// Get supported x402 schemes and networks
+router.get('/supported', (req: Request, res: Response) => {
+  const supported: Supported = {
+    x402Version: 1,
+    kind: [
+      {
+        scheme: 'exact',
+        networkId: 'solana-devnet',
+        extra: {
+          fees: '0.1%',
+          minAmount: '0.01',
+          maxAmount: '10000',
+          supportedTokens: ['USDC']
+        }
+      }
+    ]
+  };
+  res.json(supported);
 });
 
 export default router;

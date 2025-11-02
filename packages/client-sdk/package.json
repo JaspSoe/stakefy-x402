@@ -1,6 +1,6 @@
 {
   "name": "stakefy-x402-client",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Client SDK for Stakefy x402 - 0.1% fee Solana payment facilitator",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,11 +24,12 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@solana/spl-token": "^0.3.9",
     "@solana/web3.js": "^1.87.6",
-    "@solana/spl-token": "^0.3.9"
+    "x402": "^0.7.1"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "@types/node": "^20.10.5"
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3"
   }
 }

@@ -1,5 +1,6 @@
 import { Connection, PublicKey, Transaction, Keypair } from '@solana/web3.js';
 import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferInstruction } from '@solana/spl-token';
+import { createPaymentHeader, selectPaymentRequirements, verify } from 'x402';
 import { X402Config, PaymentOptions, PaymentSession, BudgetOptions, Budget, BudgetPaymentOptions } from './types';
 export class StakefyX402Client {
   private config: X402Config;
