@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: var(--font-geist-sans);
+}
+
+.wallet-button-wrapper button {
+  background-color: white !important;
+  border: 1px solid #e5e7eb !important;
+  color: black !important;
+  border-radius: 12px !important;
+  height: 44px !important;
+  font-size: 14px !important;
+}

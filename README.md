@@ -287,3 +287,153 @@ MIT © Stakefy Team
 **Built by developers, for developers. Ship faster with better features.** 🚀
 
 *Lower fees. More features. 100% open source.*
+
+## 🚨 Error Handling
+
+Stakefy provides a **comprehensive error taxonomy** with actionable recovery suggestions.
+
+### Error Categories
+```typescript
+import { 
+  StakefyError, 
+  StakefyErrors, 
+  StakefyErrorCode,
+  isStakefyError,
+  handleStakefyError 
+} from 'x402-stakefy-sdk';
+```
+
+### Error Codes
+
+| Code Range | Category | Examples |
+|------------|----------|----------|
+| **1xxx** | Network | Request failed, timeout, connection lost |
+| **2xxx** | Validation | Invalid amount, address, signature, username |
+| **3xxx** | Payment | Insufficient funds, transaction failed, expired |
+| **4xxx** | Facilitator | Unavailable, rate limited, unauthorized |
+| **5xxx** | Session | Not found, expired, budget exceeded |
+| **6xxx** | Wallet | Not connected, rejected, unsupported |
+| **7xxx** | Merchant | Not found, invalid config, webhook failed |
+| **9xxx** | Internal | Unknown error, not implemented |
+
+### Usage Examples
+
+**Basic Error Handling:**
+```typescript
+try {
+  const payment = await client.createPayment({
+    amount: 0.1,
+    recipient: 'merchant123',
+    memo: 'Coffee payment'
+  });
+} catch (error) {
+  const stakefyError = handleStakefyError(error);
+  
+  console.error(stakefyError.code);        // Error code
+  console.error(stakefyError.userMessage);  // User-friendly message
+  console.error(stakefyError.recovery);     // Recovery suggestion
+}
+```
+
+**Specific Error Handling:**
+```typescript
+try {
+  await client.createPayment({ amount, recipient });
+} catch (error) {
+  if (isStakefyError(error)) {
+    switch (error.code) {
+      case StakefyErrorCode.PAYMENT_INSUFFICIENT_FUNDS:
+        alert(`You need ${error.metadata.required} SOL`);
+        break;
+      
+      case StakefyErrorCode.WALLET_NOT_CONNECTED:
+        alert('Please connect your wallet first');
+        break;
+      
+      case StakefyErrorCode.FACILITATOR_RATE_LIMITED:
+        setTimeout(retry, error.metadata.retryAfter * 1000);
+        break;
+      
+      default:
+        alert(error.userMessage);
+    }
+  }
+}
+```
+
+**Creating Custom Errors:**
+```typescript
+// Use built-in error factories
+throw StakefyErrors.invalidAmount(-5);
+throw StakefyErrors.walletNotConnected();
+throw StakefyErrors.sessionExpired('session-123');
+throw StakefyErrors.insufficientFunds(0.5, 0.2);
+
+// Or create custom
+throw new StakefyError({
+  code: StakefyErrorCode.PAYMENT_REJECTED,
+  message: 'Payment rejected by merchant',
+  userMessage: 'The merchant declined your payment',
+  recovery: 'Please contact the merchant for details',
+  metadata: { merchantId: 'abc123' }
+});
+```
+
+**Error Serialization:**
+```typescript
+const error = StakefyErrors.transactionFailed('sig123', 'Network error');
+
+// Send to logging service
+console.log(error.toJSON());
+// {
+//   name: 'StakefyError',
+//   code: 3002,
+//   message: 'Transaction failed: Network error',
+//   userMessage: 'Payment transaction failed',
+//   recovery: 'Please try again or contact support if the issue persists',
+//   metadata: { signature: 'sig123', error: 'Network error' },
+//   timestamp: '2025-11-02T23:40:00.000Z'
+// }
+```
+
+### Best Practices
+
+1. **Always catch StakefyErrors** - Use `handleStakefyError()` to normalize all errors
+2. **Show user-friendly messages** - Use `error.userMessage` for UI
+3. **Provide recovery actions** - Show `error.recovery` to help users fix issues
+4. **Log full context** - Send `error.toJSON()` to your logging service
+5. **Handle rate limits** - Respect `metadata.retryAfter` for backoff
+
+### React Error Handling
+```typescript
+import { useStakefyPayment } from 'x402-stakefy-react';
+
+function PaymentButton() {
+  const { pay, loading, error } = useStakefyPayment();
+  
+  const handlePay = async () => {
+    try {
+      await pay({ amount: 0.1, recipient: 'merchant' });
+    } catch (err) {
+      // Error is already a StakefyError in the hook
+      console.log(error?.userMessage);
+      console.log(error?.recovery);
+    }
+  };
+  
+  return (
+    <div>
+      <button onClick={handlePay} disabled={loading}>
+        Pay 0.1 SOL
+      </button>
+      {error && (
+        <div className="error">
+          <p>{error.userMessage}</p>
+          {error.recovery && <p className="hint">{error.recovery}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+

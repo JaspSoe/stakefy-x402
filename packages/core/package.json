@@ -1,0 +1,57 @@
+{
+  "name": "x402-stakefy-sdk",
+  "version": "1.0.5",
+  "description": "Feature-rich Solana x402 payment SDK with payment channels, @username system, session budgets, and merchant tools. Better than alternatives with 0.1% fees.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "solana",
+    "x402",
+    "payments",
+    "crypto",
+    "usdc",
+    "web3",
+    "stakefy",
+    "blockchain",
+    "payment-gateway",
+    "payment-channels",
+    "session-budgets",
+    "username-payments",
+    "merchant-sdk",
+    "facilitator",
+    "solana-pay",
+    "qr-code",
+    "webhooks",
+    "typescript"
+  ],
+  "author": "stakefyx402",
+  "license": "MIT",
+  "homepage": "https://github.com/JaspSoe/stakefy-x402#readme",
+  "bugs": {
+    "url": "https://github.com/JaspSoe/stakefy-x402/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JaspSoe/stakefy-x402.git",
+    "directory": "packages/core"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.95.8",
+    "@solana/spl-token": "^0.4.9",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
