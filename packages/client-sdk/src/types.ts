@@ -65,3 +65,38 @@ export interface PayToUsernameOptions {
   reference: string;
   metadata?: any;
 }
+
+export interface CreateChannelOptions {
+  userPublicKey: string;
+  depositAmount: number;
+  duration: number;
+  metadata?: any;
+}
+
+export interface Channel {
+  channelId: string;
+  userPublicKey: string;
+  merchantId: string;
+  depositAmount: number;
+  withdrawnAmount: number;
+  remainingBalance: number;
+  status: 'open' | 'closed' | 'settled';
+  nonce: number;
+  createdAt: string;
+  expiresAt: string;
+  settledAt?: string;
+}
+
+export interface ChannelPaymentOptions {
+  channelId: string;
+  amount: number;
+  nonce: number;
+  signature: string;
+  reference: string;
+  metadata?: any;
+}
+
+export interface SettleChannelOptions {
+  channelId: string;
+  merchantAddress: string;
+}

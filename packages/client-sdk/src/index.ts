@@ -1,7 +1,7 @@
 import { Connection, PublicKey, Transaction, Keypair } from '@solana/web3.js';
 import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferInstruction } from '@solana/spl-token';
 import { createPaymentHeader, selectPaymentRequirements, verify } from 'x402';
-import { X402Config, PaymentOptions, PaymentSession, BudgetOptions, Budget, BudgetPaymentOptions, RegisterUsernameOptions, UserProfile, PayToUsernameOptions } from './types';
+import { X402Config, PaymentOptions, PaymentSession, BudgetOptions, Budget, BudgetPaymentOptions, RegisterUsernameOptions, UserProfile, PayToUsernameOptions, CreateChannelOptions, Channel, ChannelPaymentOptions, SettleChannelOptions } from './types';
 export class StakefyX402Client {
   private config: X402Config;
   private connection: Connection;
@@ -167,6 +167,55 @@ export class StakefyX402Client {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to create payment');
+    }
+    return response.json();
+  }
+
+  async createChannel(options: CreateChannelOptions): Promise<Channel> {
+    const response = await fetch(`${this.config.facilitatorUrl}/api/channel/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        merchantId: this.config.merchantId,
+        ...options
+      })
+    });
+    if (!response.ok) {
+      throw new Error('Failed to create channel');
+    }
+    return response.json();
+  }
+
+  async payFromChannel(options: ChannelPaymentOptions): Promise<any> {
+    const response = await fetch(`${this.config.facilitatorUrl}/api/channel/payment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(options)
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to process channel payment');
+    }
+    return response.json();
+  }
+
+  async getChannelStatus(channelId: string): Promise<Channel> {
+    const response = await fetch(`${this.config.facilitatorUrl}/api/channel/${channelId}`);
+    if (!response.ok) {
+      throw new Error('Failed to get channel status');
+    }
+    return response.json();
+  }
+
+  async settleChannel(options: SettleChannelOptions): Promise<any> {
+    const response = await fetch(`${this.config.facilitatorUrl}/api/channel/settle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(options)
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to settle channel');
     }
     return response.json();
   }
