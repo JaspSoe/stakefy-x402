@@ -2,12 +2,14 @@ import { Router, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { SolanaService } from './solana';
 import { WebhookService, WebhookPayload } from './webhooks';
+import { QRCodeService } from './qrcode';
 import { PaymentRequest, PaymentSession, VerifyRequest, SettleRequest } from './types';
 import { config } from './config';
 
 const router = Router();
 const solanaService = new SolanaService();
 const webhookService = new WebhookService();
+const qrCodeService = new QRCodeService();
 
 // In-memory storage (replace with DB in production)
 const sessions = new Map<string, PaymentSession & { keypair: any }>();
@@ -23,7 +25,19 @@ router.post('/payment/create', async (req: Request, res: Response) => {
 
     const sessionId = uuidv4();
     const feeAmount = (amount * config.feePercentage) / 100;
+    const totalAmount = amount + feeAmount;
     const keypair = await solanaService.generateDepositAddress();
+    const depositAddress = keypair.publicKey.toString();
+
+    // Generate QR code
+    const qrCode = await qrCodeService.generatePaymentQR({
+      address: depositAddress,
+      amount: totalAmount,
+      token: config.usdcMint,
+      label: `Stakefy Payment - ${merchantId}`,
+      message: `Order: ${reference}`,
+      reference: sessionId
+    });
 
     const session: PaymentSession & { keypair: any } = {
       sessionId,
@@ -32,9 +46,9 @@ router.post('/payment/create', async (req: Request, res: Response) => {
       feeAmount,
       reference,
       status: 'pending',
-      depositAddress: keypair.publicKey.toString(),
+      depositAddress,
       createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 min expiry
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       webhookUrl,
       keypair: Array.from(keypair.secretKey),
     };
@@ -51,7 +65,7 @@ router.post('/payment/create', async (req: Request, res: Response) => {
         feeAmount,
         status: 'pending',
         timestamp: new Date().toISOString(),
-        depositAddress: session.depositAddress
+        depositAddress
       };
       
       webhookService.sendWebhook(webhookUrl, payload).catch(err => 
@@ -60,7 +74,43 @@ router.post('/payment/create', async (req: Request, res: Response) => {
     }
 
     const { keypair: _, ...sessionResponse } = session;
-    res.json(sessionResponse);
+    res.json({
+      ...sessionResponse,
+      qrCode,
+      solanaPayUrl: `solana:${depositAddress}?amount=${totalAmount}&spl-token=${config.usdcMint}&label=${encodeURIComponent(`Stakefy Payment - ${merchantId}`)}&message=${encodeURIComponent(`Order: ${reference}`)}&reference=${sessionId}`
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get QR code for existing session
+router.get('/payment/:sessionId/qr', async (req: Request, res: Response) => {
+  try {
+    const session = sessions.get(req.params.sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const totalAmount = session.amount + session.feeAmount;
+    const qrCode = await qrCodeService.generatePaymentQR({
+      address: session.depositAddress,
+      amount: totalAmount,
+      token: config.usdcMint,
+      label: `Stakefy Payment - ${session.merchantId}`,
+      message: `Order: ${session.reference}`,
+      reference: session.sessionId
+    });
+
+    // Return as image
+    const base64Data = qrCode.replace(/^data:image\/png;base64,/, '');
+    const img = Buffer.from(base64Data, 'base64');
+    
+    res.writeHead(200, {
+      'Content-Type': 'image/png',
+      'Content-Length': img.length
+    });
+    res.end(img);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -126,7 +176,6 @@ router.post('/payment/settle', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Payment not completed' });
     }
 
-    // Recreate keypair from stored secret
     const { Keypair } = await import('@solana/web3.js');
     const keypair = Keypair.fromSecretKey(new Uint8Array(session.keypair));
 
@@ -134,7 +183,7 @@ router.post('/payment/settle', async (req: Request, res: Response) => {
       keypair,
       merchantAddress,
       session.amount,
-      'YOUR_FEE_WALLET_ADDRESS', // TODO: Set this in config
+      'YOUR_FEE_WALLET_ADDRESS',
       session.feeAmount
     );
 
@@ -160,7 +209,7 @@ router.get('/payment/status/:sessionId', (req: Request, res: Response) => {
   res.json(sessionData);
 });
 
-// Webhook endpoint for testing
+// Webhook test endpoint
 router.post('/webhook/test', (req: Request, res: Response) => {
   console.log('📥 Webhook received:', req.body);
   console.log('📋 Headers:', req.headers);
