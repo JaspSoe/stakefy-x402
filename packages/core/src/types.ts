@@ -156,3 +156,16 @@ export interface WebhookEvent {
   depositAddress?: string;
   transaction?: string;
 }
+
+
+// Token support
+import { TokenType } from './tokens';
+export type { TokenMint } from './tokens';
+export { TokenType, TOKENS, getTokenMint } from './tokens';
+
+// Extended payment request with token support
+export interface TokenPaymentRequest extends Omit<PaymentRequest, 'amount'> {
+  amount: number | string;
+  token?: TokenType;
+  tokenMint?: string;
+}

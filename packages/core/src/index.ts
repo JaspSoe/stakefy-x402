@@ -1,3 +1,7 @@
+// ============================================
+// CORE SDK
+// ============================================
+
 // Main client
 export { StakefyX402Client } from './client';
 
@@ -25,23 +29,6 @@ export {
   ChannelRequestSchema,
 } from './types';
 
-// Version
-export const VERSION = '1.0.1';
-
-// Default configurations
-export const MAINNET_API = 'https://stakefy-x402-production.up.railway.app';
-export const DEVNET_API = 'https://stakefy-x402-production.up.railway.app';
-
-// Quick start helper
-import { StakefyX402Client } from './client';
-
-export function createClient(apiUrl?: string, network: 'mainnet-beta' | 'devnet' = 'devnet') {
-  return new StakefyX402Client({
-    apiUrl: apiUrl || DEVNET_API,
-    network,
-  });
-}
-
 // Error handling
 export {
   StakefyError,
@@ -51,3 +38,58 @@ export {
   handleStakefyError,
 } from './errors';
 export type { StakefyErrorDetails } from './errors';
+
+// Version
+export const VERSION = '2.0.0';
+
+// Default configurations
+export const MAINNET_API = 'https://stakefy-x402-production.up.railway.app';
+export const DEVNET_API = 'https://stakefy-x402-production.up.railway.app';
+
+// Quick start helper
+import { StakefyX402Client } from './client';
+export function createClient(apiUrl?: string, network: 'mainnet-beta' | 'devnet' = 'devnet') {
+  return new StakefyX402Client({
+    apiUrl: apiUrl || DEVNET_API,
+    network,
+  });
+}
+
+// ============================================
+// REACT HOOKS (Optional)
+// ============================================
+
+// Provider
+export { StakefyProvider, useStakefyClient } from './react/StakefyProvider';
+
+// Hooks
+export { useStakefyPayment } from './react/useStakefyPayment';
+export { useSessionBudget } from './react/useSessionBudget';
+export { useUsername } from './react/useUsername';
+export { usePaymentChannel } from './react/usePaymentChannel';
+export { usePaywall } from './react/usePaywall';
+
+// ============================================
+// EXPRESS MIDDLEWARE (Optional)
+// ============================================
+
+export { stakefyPaywall, stakefyBudget, getPaymentInfo } from './express/index';
+export type { StakefyMiddlewareOptions } from './express/index';
+
+// ============================================
+// TOKEN UTILITIES
+// ============================================
+
+export { 
+  TokenType,
+  TOKENS,
+  getTokenMint,
+  usdToMicroUsdc,
+  microUsdcToUsd,
+  solToLamports,
+  lamportsToSol,
+  toTokenUnits,
+  fromTokenUnits
+} from './tokens';
+
+export type { TokenMint } from './tokens';

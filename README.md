@@ -8,6 +8,8 @@
 
 🚀 **The most complete Solana x402 payment SDK** - Better than alternatives, 100% open source.
 
+👉 **[⚡️ 5-Minute Quickstart Guide](./QUICKSTART.md)** - Get started in 5 minutes!
+
 ## 📦 Ecosystem Packages
 
 Install what you need - all packages work together seamlessly:

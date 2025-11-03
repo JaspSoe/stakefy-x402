@@ -194,4 +194,19 @@ export class StakefyX402Client {
     const expectedSignature = Buffer.from(JSON.stringify(payload)).toString('base64');
     return signature === expectedSignature;
   }
+
+  /**
+   * Auto-initialize with smart defaults
+   * Detects network from environment and uses default facilitator
+   */
+  static auto(overrides?: Partial<StakefyConfig>): StakefyX402Client {
+    const network = (process.env.SOLANA_NETWORK as 'mainnet-beta' | 'devnet') || 'devnet';
+    const apiUrl = process.env.STAKEFY_API_URL || 'https://stakefy-x402-production.up.railway.app';
+
+    return new StakefyX402Client({
+      apiUrl,
+      network,
+      ...overrides,
+    });
+  }
 }
