@@ -1,6 +1,6 @@
 {
   "name": "x402-stakefy-sdk",
-  "version": "2.4.0",
+  "version": "2.6.0",
   "description": "The most feature-rich x402 payment SDK for Solana - 10x lower fees (0.1%), social payments, session budgets, payment channels, React hooks, and Express middleware",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

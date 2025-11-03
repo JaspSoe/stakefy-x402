@@ -132,3 +132,30 @@ export type {
 // ============================================
 
 export { Paywall, SessionBudget } from './react/Paywall';
+
+// ============================================
+// SESSION BUDGET PRESETS (New!)
+// ============================================
+export { SessionBudgetPresets, createBudgetPresets } from './budget-presets';
+
+// ============================================
+// PAY TO X HELPER (Killer Feature!)
+// ============================================
+export { payToX } from './payToX';
+
+// ============================================
+// RECEIPT VERIFICATION (Enterprise Feature!)
+// ============================================
+export {
+  verifyReceipt,
+  verifySession,
+  generateProof,
+  createReceiptFromPayment,
+  validateProof
+} from './receipts';
+
+export type {
+  PaymentReceipt,
+  VerifiedSession,
+  ReceiptVerifyOptions
+} from './receipts';
