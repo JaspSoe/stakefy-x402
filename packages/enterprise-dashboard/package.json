@@ -1,0 +1,15 @@
+{
+  "name": "@stakefy/enterprise-dashboard",
+  "version": "1.0.0",
+  "description": "Enterprise dashboard for Stakefy x402 - usage tracking, quotas, and analytics",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "keywords": ["stakefy", "enterprise", "dashboard", "analytics"],
+  "author": "Stakefy Team",
+  "license": "MIT"
+}

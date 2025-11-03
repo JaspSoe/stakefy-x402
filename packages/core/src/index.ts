@@ -159,3 +159,18 @@ export type {
   VerifiedSession,
   ReceiptVerifyOptions
 } from './receipts';
+
+// ============================================
+// ENTERPRISE FEATURES (Verified Orgs, Quotas, Analytics)
+// ============================================
+export {
+  EnterpriseClient,
+  createEnterpriseClient
+} from './enterprise';
+
+export type {
+  OrganizationBadge,
+  UsageQuota,
+  UsageMetrics,
+  Invoice
+} from './enterprise';
