@@ -1,0 +1,20 @@
+{
+  "name": "stakefy-express-demo",
+  "version": "1.0.0",
+  "description": "Live demo of Stakefy x402 payments with Express",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "keywords": ["stakefy", "x402", "demo", "express"],
+  "author": "stakefyx402",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "x402-stakefy-sdk": "^2.1.1",
+    "stakefy-express": "^1.0.2",
+    "cors": "^2.8.5"
+  }
+}
