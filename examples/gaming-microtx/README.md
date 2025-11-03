@@ -1,21 +1,40 @@
-# Gaming Microtransactions with Stakefy x402
+# Gaming Microtransactions - Session Budget Demo
 
-In-game purchases using session budgets.
+Web3 gaming with instant purchases - no wallet popup spam!
 
 ## Features
-- Session budgets (approve once, buy multiple items)
-- Instant settlement (400ms on Solana)
-- Item inventory system
-- No wallet popup spam
 
-## Usage
+- 🎮 Session budgets (approve once, buy 100x)
+- ⚡ Instant purchases without popups
+- 💰 In-game shop with multiple items
+- 📦 Real-time inventory tracking
+
+## Quick Start
+```bash
+npm install
+npm run dev
+```
+
+## Code Highlights
 ```typescript
 import { oneShot } from 'x402-stakefy-sdk';
 
-// Approve 100 item purchases
-await oneShot(client, merchantWallet, 100, 0.01);
-// Each item costs $0.01, total $1 budget
+// Approve $1 for 100 purchases @ $0.01 each
+await oneShot(client, merchant, user, 100, 0.01);
+
+// Now buy items without wallet popups!
+// Each purchase auto-deducts from session budget
 ```
 
-## Demo
-Coming soon - Game with coins, powerups, cosmetics.
+## Why This Beats Traditional Gaming
+
+| Feature | Stakefy | Traditional |
+|---------|:-------:|:-----------:|
+| **Wallet Popups** | 1 (for session) | 100 (per item) |
+| **Settlement** | 400ms | 3-5 days |
+| **Fees** | 0.1% | 30% (app stores) |
+| **True Ownership** | ✅ On-chain | ❌ Centralized |
+
+## License
+
+MIT
