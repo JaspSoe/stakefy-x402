@@ -93,3 +93,36 @@ export {
 } from './tokens';
 
 export type { TokenMint } from './tokens';
+
+// ============================================
+// PAYMENT VERIFICATION
+// ============================================
+
+export {
+  verifyPaymentTransaction,
+  verifyPayment,
+  extractPaymentHeader,
+  extractSessionId
+} from './verify';
+
+export type {
+  PaymentVerificationResult,
+  PaymentRequirements
+} from './verify';
+
+// ============================================
+// FETCH INTERCEPTOR
+// ============================================
+
+export {
+  createX402Fetch,
+  fetchWith402Detection,
+  createX402Interceptor
+} from './interceptor';
+
+export type {
+  WalletAdapter,
+  X402FetchOptions,
+  X402FetchConfig,
+  X402Interceptor
+} from './interceptor';

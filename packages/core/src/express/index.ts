@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
+import { Connection } from '@solana/web3.js';
 import { StakefyX402Client } from '../client';
 import { StakefyErrors, isStakefyError } from '../errors';
+import { verifyPayment, extractPaymentHeader, extractSessionId } from '../verify';
 
 export interface StakefyMiddlewareOptions {
   amount: number;
@@ -8,28 +10,66 @@ export interface StakefyMiddlewareOptions {
   apiUrl?: string;
   network?: 'mainnet-beta' | 'devnet';
   description?: string;
+  verifyOnChain?: boolean;  // NEW: Enable on-chain verification
   onSuccess?: (req: Request, sessionId: string) => void;
   onError?: (req: Request, error: Error) => void;
 }
 
+/**
+ * Express middleware for x402 payment paywalls
+ */
 export function stakefyPaywall(options: StakefyMiddlewareOptions) {
   const client = new StakefyX402Client({
     apiUrl: options.apiUrl || 'https://stakefy-x402-production.up.railway.app',
     network: options.network || 'devnet',
   });
 
+  const connection = new Connection(
+    options.network === 'mainnet-beta'
+      ? 'https://api.mainnet-beta.solana.com'
+      : 'https://api.devnet.solana.com',
+    'confirmed'
+  );
+
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const paymentHeader = req.headers['x-payment-proof'] as string;
-      const sessionId = req.headers['x-session-id'] as string;
+      // Extract payment proof from headers
+      const paymentHeader = extractPaymentHeader(req.headers);
+      const sessionId = extractSessionId(req.headers);
 
+      // If payment proof exists, verify it
       if (paymentHeader && sessionId) {
+        // Option 1: On-chain verification (more secure, slower)
+        if (options.verifyOnChain) {
+          const verificationResult = await verifyPayment(
+            paymentHeader,
+            {
+              amount: options.amount,
+              recipient: options.merchantId,
+              sessionId,
+            },
+            connection
+          );
+
+          if (!verificationResult.verified) {
+            return res.status(402).json({
+              error: 'Payment verification failed',
+              message: verificationResult.error,
+            });
+          }
+        }
+        
+        // Option 2: Trust the session (faster, for development)
+        // In production, you should verify via facilitator or on-chain
+        
         if (options.onSuccess) {
           options.onSuccess(req, sessionId);
         }
+        
         return next();
       }
 
+      // No payment proof - return 402 with payment request
       const paymentRequest = await client.createPayment({
         amount: options.amount,
         merchantId: options.merchantId,
@@ -41,6 +81,7 @@ export function stakefyPaywall(options: StakefyMiddlewareOptions) {
         },
       });
 
+      // Return 402 Payment Required with payment details
       res.status(402).json({
         error: 'Payment Required',
         message: options.description || `Payment of ${options.amount} SOL required`,
@@ -53,7 +94,7 @@ export function stakefyPaywall(options: StakefyMiddlewareOptions) {
           solanaPayUrl: paymentRequest.solanaPayUrl,
           expiresAt: paymentRequest.expiresAt,
         },
-        instructions: 'Include X-Payment-Proof and X-Session-Id headers with your next request',
+        instructions: 'Include X-Payment and X-Session-Id headers with your next request',
       });
     } catch (error) {
       if (options.onError) {
@@ -76,6 +117,9 @@ export function stakefyPaywall(options: StakefyMiddlewareOptions) {
   };
 }
 
+/**
+ * Middleware for session-based budgets
+ */
 export function stakefyBudget(options: {
   budget: number;
   duration: number;
@@ -90,9 +134,10 @@ export function stakefyBudget(options: {
 
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const sessionId = req.headers['x-session-id'] as string;
+      const sessionId = extractSessionId(req.headers);
 
       if (!sessionId) {
+        // No session - return 402 with session creation details
         res.status(402).json({
           error: 'Session Required',
           message: `Create a session with ${options.budget} SOL budget`,
@@ -104,6 +149,8 @@ export function stakefyBudget(options: {
         return;
       }
 
+      // TODO: Verify session budget and track spending
+      // For now, just pass through
       next();
     } catch (error) {
       res.status(500).json({
@@ -114,12 +161,16 @@ export function stakefyBudget(options: {
   };
 }
 
+/**
+ * Helper to extract payment info from request
+ */
 export function getPaymentInfo(req: Request) {
   return {
-    sessionId: req.headers['x-session-id'] as string | undefined,
-    paymentProof: req.headers['x-payment-proof'] as string | undefined,
-    hasPaid: !!(req.headers['x-payment-proof'] && req.headers['x-session-id']),
+    sessionId: extractSessionId(req.headers),
+    paymentProof: extractPaymentHeader(req.headers),
+    hasPaid: !!(extractPaymentHeader(req.headers) && extractSessionId(req.headers)),
   };
 }
 
+// Export types
 export type { Request, Response, NextFunction } from 'express';
