@@ -1,41 +1,74 @@
-# Stakefy x402 - Complete Solana Payment Infrastructure
+# Stakefy x402 - Enterprise Solana Payment Infrastructure
 
 [![npm version](https://img.shields.io/npm/v/x402-stakefy-sdk.svg?style=flat-square)](https://www.npmjs.com/package/x402-stakefy-sdk)
 [![npm downloads](https://img.shields.io/npm/dm/x402-stakefy-sdk.svg?style=flat-square)](https://www.npmjs.com/package/x402-stakefy-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
-[![Solana](https://img.shields.io/badge/Solana-Mainnet-14F195.svg?style=flat-square)](https://solana.com/)
 
-**The most feature-rich x402 payment SDK for Solana** — Production-ready infrastructure with **10x lower fees** than competitors.
+**The only x402 SDK with cryptographic receipt verification** — Enterprise-grade payment infrastructure with 10x lower fees.
 
-[🚀 Live Demo](https://stakefy-x402-demo-1twf7cczm-jasper-soes-projects.vercel.app) · [📦 NPM Package](https://npmjs.com/package/x402-stakefy-sdk) · [📊 Feature Comparison](./FEATURES.md) · [💡 Examples](./examples) · [🐦 Twitter](https://twitter.com/stakefy)
+[🚀 Live Demo](https://stakefy-x402-demo-1twf7cczm-jasper-soes-projects.vercel.app) · [�� NPM](https://npmjs.com/package/x402-stakefy-sdk) · [📊 Comparison](./FEATURES.md) · [🔐 Receipt Spec](./RECEIPT-SPEC.md)
 
 ---
 
-## 🎯 Why Stakefy Beats PayAI
+## 🎯 Why Enterprises Choose Stakefy Over PayAI
 
-| Feature | Stakefy x402 | PayAI x402-solana | Savings |
-|---------|:------------:|:-----------------:|:-------:|
-| **Transaction Fees** | **0.1%** | 1-2% | **90-95%** |
-| **Social Payments** | ✅ `payToX('@user')` | ❌ | ✨ Exclusive |
-| **Session Budgets** | ✅ `oneShot()`, `perMinute()` | ❌ | ✨ Exclusive |
-| **Payment Channels** | ✅ `perMonth()` subscriptions | ❌ | ✨ Exclusive |
-| **Auto-402 Handler** | ✅ Zero boilerplate | ❌ | ✨ Exclusive |
-| **React Library** | ✅ Full hooks + components | ❌ | ✨ Complete |
-| **Express Middleware** | ✅ One-line paywalls | ❌ | ✨ Drop-in |
-| **Live Examples** | ✅ 6 production examples | ❌ | ✨ Copy-paste |
+| Feature | Stakefy x402 | PayAI | Winner |
+|---------|:------------:|:-----:|:------:|
+| **Transaction Fees** | **0.1%** | 1-2% | Stakefy (10x cheaper) |
+| **Receipt Verification** | ✅ SHA-256 proofs | ❌ None | **Stakefy EXCLUSIVE** |
+| **Session State Tracking** | ✅ Full audit trail | ❌ None | **Stakefy EXCLUSIVE** |
+| **Social Payments** | ✅ `payToX()` | ❌ | **Stakefy EXCLUSIVE** |
+| **Budget Presets** | ✅ 4 presets | ❌ | **Stakefy EXCLUSIVE** |
+| **Auto-402 Handler** | ✅ Zero config | ❌ | **Stakefy EXCLUSIVE** |
+| **React Library** | ✅ Complete | ❌ | **Stakefy EXCLUSIVE** |
 
-**📊 [See Full Comparison →](./FEATURES.md)**
+**📊 [Full Comparison →](./FEATURES.md)** | **🔐 [Receipt Spec →](./RECEIPT-SPEC.md)**
 
 ---
 
-## 💰 Real Cost Savings
+## 🔐 NEW: Enterprise Receipt Verification
+
+**Stakefy is the ONLY x402 SDK with cryptographic receipt verification.**
+```typescript
+import { verifyReceipt, verifySession } from 'x402-stakefy-sdk';
+
+// Verify single payment with SHA-256 proof
+const receipt = await verifyReceipt({
+  signature: 'TRANSACTION_SIG',
+  expectedAmount: 0.1,
+  expectedMerchant: 'WALLET'
+}, connection);
+
+console.log(receipt.proof);     // SHA-256 hash
+console.log(receipt.verified);  // true (on-chain confirmed)
+
+// Verify entire session for compliance
+const session = await verifySession('session-123', receipts, connection);
+
+console.log(session.totalPaid);          // 15.50 USDC
+console.log(session.totalTransactions);  // 155 payments
+console.log(session.merchantVerified);   // true
+```
+
+**Use cases:**
+- ✅ Tax compliance & auditing
+- ✅ Dispute resolution
+- ✅ Fraud prevention
+- ✅ Enterprise invoicing
+
+**[Read Receipt Specification →](./RECEIPT-SPEC.md)**
+
+---
+
+## 💰 Real Savings Calculator
 
 Processing **$10,000/month**:
-- **Stakefy:** $10 in fees = **$120/year**
-- **PayAI:** $100-200 in fees = **$1,200-2,400/year**
+- **Stakefy:** $10/month = $120/year
+- **PayAI:** $100-200/month = $1,200-2,400/year
 
-**You save: $1,080-2,280 annually** (per $10k volume)
+**You save: $1,080-2,280 annually**
+
+At **$100,000/month**: Save $10,800-22,800/year 🤯
 
 ---
 
@@ -60,214 +93,132 @@ const payment = await client.createPayment({
 });
 ```
 
-### Social Payments (Killer Feature)
-```typescript
-import { payToX } from 'x402-stakefy-sdk';
+---
 
-// Pay by username instead of wallet address!
-await payToX(client, '@elonmusk', 0.25);
+## 🚀 Exclusive Features
+
+### 1️⃣ Receipt Verification (Enterprise)
+```typescript
+// Cryptographic proof of payment
+const receipt = await verifyReceipt(options, connection);
+console.log(receipt.proof); // SHA-256 deterministic hash
 ```
 
-### Session Budgets (No Popup Spam)
+### 2️⃣ Social Payments
+```typescript
+// Pay by username instead of wallet
+await payToX(client, '@creator', 0.25);
+```
+
+### 3️⃣ Budget Presets
 ```typescript
 import { oneShot, perMinute, perMonth } from 'x402-stakefy-sdk';
 
-// Approve once, pay 100x
-await oneShot(client, merchant, userWallet, 100, 0.01);
+await oneShot(client, merchant, user, 100, 0.01);  // 100 payments
+await perMinute(client, merchant, user, 0.1, 60);  // $0.10/min
+await perMonth(client, merchant, user, 9.99);      // $9.99/month
+```
 
-// Per-minute billing
-await perMinute(client, merchant, userWallet, 0.1, 60);
-
-// Monthly subscription
-await perMonth(client, merchant, userWallet, 9.99);
+### 4️⃣ Session State Tracking
+```typescript
+// Track entire payment session with audit trail
+const session = await verifySession(sessionId, receipts, connection);
 ```
 
 ---
 
-## 🎮 Live Examples (Copy & Deploy)
+## 📦 What's Included
+```typescript
+// Core Features
+import { 
+  StakefyX402Client,
+  payToX,
+  oneShot, perMinute, perMonth, nonceOnce
+} from 'x402-stakefy-sdk';
+
+// Receipt Verification (NEW!)
+import {
+  verifyReceipt,
+  verifySession,
+  generateProof,
+  validateProof
+} from 'x402-stakefy-sdk';
+
+// React Components
+import {
+  PaymentButton,
+  Paywall,
+  usePayment,
+  useSessionBudget
+} from 'x402-stakefy-sdk';
+
+// Express Middleware
+import {
+  stakefyPaywall,
+  stakefyBudget
+} from 'x402-stakefy-sdk';
+```
+
+---
+
+## 🎮 Live Examples
 
 ### [Next.js Paywall](./examples/nextjs-paywall) ✅ LIVE
-Content paywall with beautiful UI. **[Try it →](./examples/nextjs-paywall)**
-```bash
-cd examples/nextjs-paywall
-npm install && npm run dev
-```
+Beautiful content paywall with instant unlock.
+
+**[View Demo →](./examples/nextjs-paywall)**
 
 ### Coming This Week:
-- **Stripe Clone** - Monthly subscriptions
-- **Content Paywall** - Pay-per-view (OnlyFans style)
-- **Gaming Microtx** - In-game purchases
-- **QR POS** - Point-of-sale system  
-- **SaaS Seats** - Team subscriptions
+- Stripe Clone (subscriptions)
+- Content Paywall (pay-per-view)
+- Gaming Microtx (in-game purchases)
+- QR POS (point-of-sale)
+- SaaS Seats (team billing)
 
-**[View All Examples →](./examples)**
-
----
-
-## 📦 Complete Ecosystem
-
-| Package | Description | Version |
-|---------|-------------|---------|
-| **x402-stakefy-sdk** | Core SDK (all-in-one) | [![npm](https://img.shields.io/npm/v/x402-stakefy-sdk)](https://npmjs.com/package/x402-stakefy-sdk) |
-| **x402-stakefy-react** | React hooks (optional) | [![npm](https://img.shields.io/npm/v/x402-stakefy-react)](https://npmjs.com/package/x402-stakefy-react) |
-| **stakefy-express** | Express middleware (optional) | [![npm](https://img.shields.io/npm/v/stakefy-express)](https://npmjs.com/package/stakefy-express) |
-
-> **Note:** All features are in the core SDK. Separate packages are thin wrappers.
-
----
-
-## 🚀 Features That Win
-
-### 1️⃣ Social Payments (@username)
-```typescript
-// Instead of this mess:
-const payment = await client.createPayment({
-  recipient: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU'
-});
-
-// Do this:
-await payToX(client, '@creator', 1.0);
-```
-
-### 2️⃣ Session Budgets (One Approval, 100 Payments)
-```typescript
-// Approve $10 budget for 1 hour
-const presets = createBudgetPresets(client, merchant, user);
-await presets.oneShot(100, 0.10); // 100 requests @ $0.10
-
-// Now make 100 API calls without wallet popups
-await fetch('/api/request1'); // ✅ Auto-paid
-await fetch('/api/request2'); // ✅ Auto-paid
-// ... 98 more requests, zero popups
-```
-
-### 3️⃣ Payment Channels (Recurring Subscriptions)
-```typescript
-// Set-and-forget monthly billing
-await presets.perMonth(9.99); // $9.99/month, auto-renews
-```
-
-### 4️⃣ Auto-402 Interceptor (Zero Boilerplate)
-```typescript
-import { createX402Interceptor } from 'x402-stakefy-sdk';
-
-// One line = automatic payment handling
-createX402Interceptor({ wallet, network: 'mainnet-beta' });
-
-// All 402 responses handled automatically
-await fetch('/api/protected'); // Pays & retries automatically
-```
-
-### 5️⃣ React Components (Just Works)
-```typescript
-import { PaymentButton, Paywall } from 'x402-stakefy-sdk';
-
-<PaymentButton 
-  amount={0.5} 
-  merchantId="WALLET"
-  onSuccess={(sig) => console.log('Paid!', sig)}
->
-  Pay 0.5 USDC
-</PaymentButton>
-```
-
-### 6️⃣ Express Middleware (One Line)
-```typescript
-import { stakefyPaywall } from 'x402-stakefy-sdk';
-
-app.get('/api/premium',
-  stakefyPaywall({ amount: 0.1, merchantWallet: 'WALLET' }),
-  (req, res) => res.json({ data: 'Premium content' })
-);
-```
+**[All Examples →](./examples)**
 
 ---
 
 ## 📖 Documentation
 
-- **[Getting Started](./packages/core/README.md)** - Full SDK documentation
-- **[Feature Comparison](./FEATURES.md)** - vs PayAI & competitors
-- **[Examples](./examples)** - Production-ready code
-- **[Marketing Plan](./MARKETING.md)** - Launch strategy
+- **[Getting Started](./packages/core/README.md)** - Full SDK docs
+- **[Receipt Specification](./RECEIPT-SPEC.md)** - Proof algorithm & verification
+- **[Feature Comparison](./FEATURES.md)** - vs PayAI detailed breakdown
+- **[Examples](./examples)** - Production code
 
 ---
 
-## 🏗️ Architecture
-```
-┌─────────────────────────────────────┐
-│    Client (React/Next.js/etc)       │
-│  ┌──────────┐  ┌─────────────────┐ │
-│  │  Hooks   │  │ Auto-Interceptor│ │
-│  └──────────┘  └─────────────────┘ │
-└─────────────────────────────────────┘
-               ↓
-┌─────────────────────────────────────┐
-│   Stakefy x402 SDK (0.1% fee)       │
-│  Budget Presets • Social Pay • Core │
-└─────────────────────────────────────┘
-               ↓
-┌─────────────────────────────────────┐
-│   Facilitator API (Railway)         │
-│  Verify • Settle • Username Registry│
-└─────────────────────────────────────┘
-               ↓
-┌─────────────────────────────────────┐
-│   Solana Blockchain (400ms)         │
-└─────────────────────────────────────┘
-```
+## 🏆 What We Shipped Today
+
+✅ **v2.6.0** - Receipt verification system  
+✅ **SHA-256 deterministic proofs**  
+✅ **Session state tracking**  
+✅ **Budget presets** (oneShot, perMinute, perMonth)  
+✅ **Social payments** (payToX)  
+✅ **Live examples**  
+✅ **Professional docs**  
 
 ---
 
-## 🎯 Use Cases
+## 🎯 Comparison: PayAI vs Stakefy
 
-### AI Chat Apps
-```typescript
-// Approve $10 for 1000 messages
-await oneShot(client, merchant, user, 1000, 0.01);
-// No wallet popup for each message ✅
-```
+**PayAI has:**
+- Core SDK ✅
+- Multi-chain (EVM + Solana) ✅
+- Basic payment verification ✅
 
-### Content Tips
-```typescript
-// Tip creators by username
-await payToX(client, '@creator', 0.50);
-```
+**Stakefy has everything above PLUS:**
+- 90% lower fees (0.1% vs 1-2%) ✨
+- Receipt verification with SHA-256 proofs ✨
+- Session state tracking ✨
+- Social payments (@username) ✨
+- Budget presets (oneShot, perMinute, perMonth) ✨
+- Auto-402 interceptor ✨
+- Complete React library ✨
+- Drop-in Express middleware ✨
+- Live production examples ✨
 
-### SaaS Subscriptions
-```typescript
-// Monthly recurring payment
-await perMonth(client, merchant, user, 29.99);
-```
-
-### API Monetization
-```typescript
-app.use('/api/*', stakefyPaywall({ amount: 0.01 }));
-```
-
----
-
-## 🚢 What We Shipped Today
-
-✅ **v2.5.0 SDK** with budget presets & `payToX()`
-✅ **Professional README** beating PayAI's clarity
-✅ **FEATURES.md** comprehensive comparison
-✅ **6 Example Projects** (1 live, 5 planned)
-✅ **Marketing materials** ready to launch
-✅ **All packages updated** and synced
-
----
-
-## 🎉 Launch Checklist
-
-- [x] Core SDK v2.5.0 published
-- [x] React & Express packages updated
-- [x] Professional documentation
-- [x] Feature comparison vs PayAI
-- [x] Live example deployed
-- [ ] Tweet launch thread
-- [ ] Product Hunt launch
-- [ ] Post in Solana Discord
-- [ ] Email early users
+**[Read Full Comparison →](./FEATURES.md)**
 
 ---
 
@@ -275,31 +226,7 @@ app.use('/api/*', stakefyPaywall({ amount: 0.01 }));
 
 - 📧 **Email:** sayhello@stakefy.io
 - 🐦 **Twitter:** [@stakefy](https://twitter.com/stakefy)
-- 💬 **Issues:** [GitHub Issues](https://github.com/JaspSoe/stakefy-x402/issues)
-- 📚 **Docs:** [Full Documentation](./packages/core/README.md)
-
----
-
-## 📈 Roadmap
-
-- [x] Core SDK with all features
-- [x] Budget presets (oneShot, perMinute, perMonth)
-- [x] Social payments (payToX)
-- [x] React hooks & components
-- [x] Express middleware
-- [x] Auto-402 interceptor
-- [x] Example projects
-- [ ] Documentation site (docs.stakefy.io)
-- [ ] Advanced analytics dashboard
-- [ ] Multi-chain support (EVM)
-- [ ] Mobile SDK (React Native)
-- [ ] Webhook system v2
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md)
+- 💬 **Issues:** [GitHub](https://github.com/JaspSoe/stakefy-x402/issues)
 
 ---
 
@@ -309,6 +236,6 @@ MIT © Stakefy Team
 
 ---
 
-**Built to beat PayAI. Ship payments that don't suck.**
+**The only x402 SDK built for enterprises. Ship payments that scale.**
 
-*Competing with x402-solana? We're 10x better. [See why →](./FEATURES.md)*
+*PayAI can't match our receipts. [See why →](./RECEIPT-SPEC.md)*
