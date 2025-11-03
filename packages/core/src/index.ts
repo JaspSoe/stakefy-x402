@@ -48,9 +48,9 @@ export const DEVNET_API = 'https://stakefy-x402-production.up.railway.app';
 
 // Quick start helper
 import { StakefyX402Client } from './client';
-export function createClient(apiUrl?: string, network: 'mainnet-beta' | 'devnet' = 'devnet') {
+export function createClient(apiUrl?: string, network: 'mainnet-beta' | 'devnet' = 'mainnet-beta') {
   return new StakefyX402Client({
-    apiUrl: apiUrl || DEVNET_API,
+    apiUrl: apiUrl || MAINNET_API,
     network,
   });
 }

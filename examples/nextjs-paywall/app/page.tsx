@@ -3,9 +3,12 @@
 import { useState } from 'react';
 import { StakefyX402Client } from 'x402-stakefy-sdk';
 
+// Toggle between mainnet and devnet
+const NETWORK: 'mainnet-beta' | 'devnet' = 'devnet'; // Change to 'mainnet-beta' for production
+
 const client = new StakefyX402Client({
   apiUrl: 'https://stakefy-x402-production.up.railway.app',
-  network: 'devnet'
+  network: NETWORK
 });
 
 const MERCHANT_WALLET = 'YOUR_WALLET_ADDRESS_HERE'; // Replace with your wallet
@@ -39,6 +42,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-8">
       <div className="max-w-4xl mx-auto">
+        {/* Network Badge */}
+        <div className="mb-4 text-center">
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+            NETWORK === 'mainnet-beta' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-yellow-100 text-yellow-800'
+          }`}>
+            {NETWORK === 'mainnet-beta' ? '🟢 Mainnet' : '🟡 Devnet (Test Mode)'}
+          </span>
+        </div>
+
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
             Premium Content 🔒
@@ -46,6 +60,11 @@ export default function Home() {
           <p className="text-xl text-gray-600">
             Powered by Stakefy x402 - Pay only 0.1 USDC to unlock
           </p>
+          {NETWORK === 'devnet' && (
+            <p className="text-sm text-yellow-600 mt-2">
+              Running on devnet - Use devnet USDC for testing
+            </p>
+          )}
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
@@ -56,8 +75,8 @@ export default function Home() {
                   The Secret to 10x Growth 🚀
                 </h2>
                 <p className="text-gray-600 text-lg leading-relaxed">
-                  This article reveals the exact strategies used by top SaaS companies 
-                  to achieve exponential growth. Learn about customer acquisition...
+                  This article reveals strategies used by top SaaS companies to achieve 
+                  exponential growth. Learn about customer acquisition...
                 </p>
                 <div className="mt-4 h-32 bg-gradient-to-b from-transparent to-white relative">
                   <div className="absolute inset-0 backdrop-blur-sm" />
@@ -88,7 +107,7 @@ export default function Home() {
                   disabled={loading}
                   className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-bold py-4 px-8 rounded-xl text-lg transition-all"
                 >
-                  {loading ? 'Processing...' : 'Pay 0.1 USDC & Unlock'}
+                  {loading ? 'Processing...' : `Pay 0.1 USDC & Unlock ${NETWORK === 'devnet' ? '(Devnet)' : ''}`}
                 </button>
 
                 {paymentUrl && (
@@ -117,48 +136,15 @@ export default function Home() {
               </h2>
               
               <div className="space-y-6 text-gray-700">
-                <p>
-                  This article reveals strategies used by top SaaS companies to achieve 
-                  exponential growth. Customer acquisition, retention, and key metrics.
-                </p>
-
-                <h3 className="text-2xl font-bold text-gray-900 mt-8">
-                  1. Product-Market Fit First
-                </h3>
-                <p>
-                  Before scaling, ensure genuine PMF. Look for organic word-of-mouth, 
-                  high retention (40%+ after 30 days), paying users without heavy sales.
-                </p>
-
-                <h3 className="text-2xl font-bold text-gray-900 mt-8">
-                  2. Distribution Beats Product
-                </h3>
-                <p>
-                  Winners have best distribution. SEO, partnerships, community, paid ads - 
-                  pick 2 channels and dominate them.
-                </p>
-
-                <h3 className="text-2xl font-bold text-gray-900 mt-8">
-                  3. Metrics That Matter
-                </h3>
-                <p>
-                  Focus on: CAC Payback Period (target: under 12 months), Net Revenue 
-                  Retention (target: 110%+), Magic Number (target: 0.75+).
-                </p>
-
-                <div className="bg-purple-50 border-l-4 border-purple-500 p-6 mt-8">
-                  <p className="italic">
-                    "The secret isn't the best product. It's best distribution 
-                    and knowing your numbers." - Successful SaaS Founder
-                  </p>
-                </div>
+                <p>Full article content here...</p>
+                <h3 className="text-2xl font-bold text-gray-900 mt-8">1. Product-Market Fit First</h3>
+                <p>Before scaling, ensure genuine PMF...</p>
+                <h3 className="text-2xl font-bold text-gray-900 mt-8">2. Distribution Beats Product</h3>
+                <p>Winners have best distribution...</p>
               </div>
 
               <div className="mt-12 pt-8 border-t text-center text-sm text-gray-500">
-                Powered by <strong>Stakefy x402</strong> - 
-                <a href="https://github.com/JaspSoe/stakefy-x402" className="text-purple-600 hover:underline ml-1">
-                  Learn more
-                </a>
+                Powered by <strong>Stakefy x402</strong> on {NETWORK === 'mainnet-beta' ? 'Mainnet' : 'Devnet'}
               </div>
             </div>
           )}
