@@ -8,22 +8,5 @@ export { useUsername } from './useUsername';
 export { usePaymentChannel } from './usePaymentChannel';
 export { usePaywall } from './usePaywall';
 
-// Re-export types from core SDK
-export type {
-  StakefyConfig,
-  PaymentRequest,
-  PaymentResponse,
-  BudgetRequest,
-  BudgetResponse,
-  BudgetPaymentRequest,
-  UsernameRequest,
-  UserProfile,
-  UsernamePaymentRequest,
-  ChannelRequest,
-  ChannelResponse,
-  ChannelPaymentRequest,
-  WebhookEvent,
-} from '../types';
-
-// Re-export client
-export { StakefyX402Client } from '../client';
+// Components (NEW!)
+export { Paywall, SessionBudget } from './Paywall';

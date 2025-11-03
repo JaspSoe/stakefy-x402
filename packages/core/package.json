@@ -1,6 +1,6 @@
 {
   "name": "x402-stakefy-sdk",
-  "version": "2.2.1",
+  "version": "2.3.1",
   "description": "Complete Solana x402 payment infrastructure - Core SDK + React Hooks + Express Middleware",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@solana/spl-token": "^0.4.14",
-    "x402-stakefy-sdk": "^2.0.0",
+    "x402-stakefy-sdk": "^2.3.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

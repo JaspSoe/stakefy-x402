@@ -1,24 +1,20 @@
 'use client'
+import { Paywall, SessionBudget } from 'x402-stakefy-sdk'
 
-import { Paywall, SessionBudget } from '@stakefy/x402/react'
-
-export default function Page() {
+export default function ReportPage() {
   return (
-    <main style={{ maxWidth: 600, margin: '60px auto', padding: 20 }}>
-      <h1>Stakefy x402 Demo</h1>
-
-      {/* Give the user a 300¢ budget for 60 minutes on scope "report" */}
-
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-4">Protected Report</h1>
+      
+      <SessionBudget scope="report" maxCents={300} ttlMinutes={60} />
+      
       <Paywall endpoint="/api/report" scope="report">
-        <div style={{ marginTop: 20, padding: 20, border: '1px solid #444', borderRadius: 12 }}>
-          <strong>Unlocked!</strong><br/>
-          Auto-unlocked by Session Budget when possible.
+        <div className="bg-green-100 p-6 rounded">
+          <h2 className="text-xl font-semibold mb-2">✅ Unlocked Content</h2>
+          <p>This is premium content that requires payment to access.</p>
+          <p className="mt-4">You have successfully unlocked this report!</p>
         </div>
       </Paywall>
-
-      <p style={{ marginTop: 20 }}>
-        (Demo) Session budget auto-pays if price ≤ remaining budget.
-      </p>
-    </main>
+    </div>
   )
 }

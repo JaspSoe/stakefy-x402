@@ -126,3 +126,9 @@ export type {
   X402FetchConfig,
   X402Interceptor
 } from './interceptor';
+
+// ============================================
+// REACT COMPONENTS (Client-side)
+// ============================================
+
+export { Paywall, SessionBudget } from './react/Paywall';
