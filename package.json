@@ -14,7 +14,16 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@types/node": "^24.10.0",
+    "eslint": "^9.39.0",
+    "tsup": "^8.5.0",
     "turbo": "^2.6.0",
-    "typescript": "^5.9.3"
-  }
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.6"
+  },
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ]
 }
