@@ -1,5 +1,4 @@
 import React from 'react'
-'use client'
 import { useEffect, useState } from 'react'
 
 // Simple buyer for demo - no actual blockchain interaction yet
@@ -16,41 +15,50 @@ export function Paywall({
 }) {
   const [locked, setLocked] = useState(true)
   const [loading, setLoading] = useState(true)
+  const [hasPaid, setHasPaid] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    (async () => {
-      const extra: any = { "x-402-buyer": JSON.stringify(buyer) }
-      const r = scope ? localStorage.getItem("x402rec-" + scope) : null
-      if (r) extra["x-402-receipt"] = r
-      
-      const res = await fetch(endpoint, { headers: extra })
-      
-      if (res.status === 200) {
-        setLocked(false)
-      } else {
-        setLocked(true)
-      }
+    // Check if already paid in this session
+    const paidKey = "x402paid-" + scope
+    const alreadyPaid = localStorage.getItem(paidKey) === 'true'
+    
+    if (alreadyPaid) {
+      setHasPaid(true)
+      setLocked(false)
       setLoading(false)
-    })()
+      return
+    }
+    
+    // Otherwise start locked
+    setLocked(true)
+    setLoading(false)
   }, [endpoint, scope])
 
   async function pay() {
     if (typeof window === 'undefined') return;
     
-    const extra: any = { "x-402-buyer": JSON.stringify(buyer) }
+    const extra: any = { 
+      "x-402-buyer": JSON.stringify(buyer),
+      "x-402-bypass": "true"
+    }
+    
     const r = scope ? localStorage.getItem("x402rec-" + scope) : null
     if (r) extra["x-402-receipt"] = r
-    extra["x-402-bypass"] = "true"
     
     const res = await fetch(endpoint, { headers: extra })
     
     if (res.status === 200) {
       const PRICE_CENTS = 25
       const budKey = "x402bud-" + scope
+      const paidKey = "x402paid-" + scope
+      
       const old = Number(localStorage.getItem(budKey)) || 0
       localStorage.setItem(budKey, String(old - PRICE_CENTS))
+      localStorage.setItem(paidKey, 'true')
+      
+      setHasPaid(true)
       setLocked(false)
     }
   }
@@ -59,15 +67,26 @@ export function Paywall({
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const qp = new URLSearchParams(location.search)
-    if (qp.get("forcepay") === "1") {
+    if (qp.get("forcepay") === "1" && !hasPaid) {
       pay()
     }
-  }, [])
+  }, [hasPaid])
 
   if (loading) return <div>Loading...</div>
   
   if (locked) {
-    return <button onClick={pay}>Pay & Unlock (Demo)</button>
+    return (
+      <div className="p-6 border-2 border-gray-300 rounded">
+        <h2 className="text-xl mb-2">🔒 Locked Content</h2>
+        <p className="mb-4">This content requires payment to access.</p>
+        <button 
+          onClick={pay}
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+        >
+          Pay & Unlock (Demo)
+        </button>
+      </div>
+    )
   }
   
   return <>{children}</>
