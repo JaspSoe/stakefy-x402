@@ -174,3 +174,47 @@ export type {
   UsageMetrics,
   Invoice
 } from './enterprise';
+
+// ============================================
+// SOLANA PRIMITIVES (Advanced Features)
+// ============================================
+
+// Fast Escrow
+export {
+  FastEscrow,
+  createEscrow,
+  releaseEscrow,
+  refundEscrow,
+  isEscrowExpired
+} from './escrow';
+
+export type {
+  EscrowConfig,
+  EscrowState
+} from './escrow';
+
+// Partial Settlement
+export {
+  PartialSettler,
+  settlePartial,
+  getSettlementHistory
+} from './partial-settle';
+
+export type {
+  PartialSettlement,
+  Settlement,
+  SettleOptions
+} from './partial-settle';
+
+// Drift Protocol Integration
+export {
+  DriftX402,
+  CopyTradingX402,
+  payForTrade,
+  executeDriftTrade
+} from './drift-integration';
+
+export type {
+  DriftTradeConfig,
+  DriftTrade
+} from './drift-integration';
