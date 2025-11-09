@@ -5,21 +5,23 @@ import routes from './routes';
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Health check
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    console.log('📥 REQUEST:', req.method, req.path, req.body);
+  }
+  next();
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'stakefy-x402-facilitator' });
 });
 
-// API routes
 app.use('/api', routes);
 
-// Start server
 app.listen(config.port, () => {
-  console.log(`🚀 Stakefy x402 Facilitator API running on port ${config.port}`);
-  console.log(`📡 Connected to: ${config.rpcUrl}`);
-  console.log(`💰 Fee: ${config.feePercentage}%`);
+  console.log('🚀 Facilitator running on port', config.port);
+  console.log('📊 Logging enabled');
 });
