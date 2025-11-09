@@ -42,7 +42,7 @@ export function usePaywall(config: PaywallConfig): PaywallState {
 
   const client = new StakefyX402Client({
     apiUrl: config.apiUrl || 'https://stakefy-x402-production.up.railway.app',
-    network: 'devnet',
+    network: 'mainnet-beta',
   });
 
   const getStorageKey = useCallback(() => {

@@ -41,7 +41,7 @@ interface PaymentRequiredResponse {
 export function createX402Fetch(config: X402FetchConfig) {
   const client = config.client || StakefyX402Client.auto();
   const connection = config.connection || new Connection(
-    'https://api.devnet.solana.com',
+    'https://api.mainnet-beta.solana.com',
     'confirmed'
   );
 

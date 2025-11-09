@@ -35,7 +35,7 @@ export interface StakefyMiddlewareOptions {
 export function stakefyPaywall(options: StakefyMiddlewareOptions) {
   const client = new StakefyX402Client({
     apiUrl: options.apiUrl || 'https://stakefy-x402-production.up.railway.app',
-    network: options.network || 'devnet',
+    network: options.network || 'mainnet-beta',
   });
 
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -117,7 +117,7 @@ export function stakefyBudget(options: {
 }) {
   const client = new StakefyX402Client({
     apiUrl: options.apiUrl || 'https://stakefy-x402-production.up.railway.app',
-    network: options.network || 'devnet',
+    network: options.network || 'mainnet-beta',
   });
 
   return async (req: Request, res: Response, next: NextFunction) => {

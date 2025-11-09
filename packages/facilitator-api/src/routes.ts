@@ -467,7 +467,7 @@ router.get('/supported', (req: Request, res: Response) => {
     kind: [
       {
         scheme: 'exact',
-        networkId: 'solana-devnet',
+        networkId: 'solana-mainnet',
         extra: {
           fees: '0.1%',
           minAmount: '0.01',
@@ -488,7 +488,7 @@ router.get('/supported', (req: Request, res: Response) => {
     kind: [
       {
         scheme: 'exact',
-        networkId: 'solana-devnet',
+        networkId: 'solana-mainnet',
         extra: {
           fees: '0.1%',
           minAmount: '0.01',

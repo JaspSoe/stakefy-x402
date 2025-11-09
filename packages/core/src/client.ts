@@ -7,7 +7,7 @@ export class StakefyX402Client {
 
   constructor(config: StakefyConfig) {
     this.apiUrl = config.apiUrl;
-    this.network = config.network || 'devnet';
+    this.network = config.network || 'mainnet-beta';
     this.timeout = config.timeout || 30000;
   }
 
@@ -200,7 +200,7 @@ export class StakefyX402Client {
    * Detects network from environment and uses default facilitator
    */
   static auto(overrides?: Partial<StakefyConfig>): StakefyX402Client {
-    const network = (process.env.SOLANA_NETWORK as 'mainnet-beta' | 'devnet') || 'devnet';
+    const network = (process.env.SOLANA_NETWORK as 'mainnet-beta' | 'devnet') || 'mainnet-beta';
     const apiUrl = process.env.STAKEFY_API_URL || 'https://stakefy-x402-production.up.railway.app';
 
     return new StakefyX402Client({

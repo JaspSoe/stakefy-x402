@@ -5,11 +5,11 @@ import { X402Config, PaymentOptions, PaymentSession, BudgetOptions, Budget, Budg
 export class StakefyX402Client {
   private config: X402Config;
   private connection: Connection;
-  private usdcMint = new PublicKey('Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'); // Devnet USDC
+  private usdcMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // Mainnet USDC
 
   constructor(config: X402Config) {
     this.config = config;
-    this.connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+    this.connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
   }
 
   async createPayment(options: PaymentOptions): Promise<PaymentSession> {

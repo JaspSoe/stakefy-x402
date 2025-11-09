@@ -3,51 +3,35 @@
 [![npm version](https://img.shields.io/npm/v/x402-stakefy-sdk.svg?style=flat-square)](https://www.npmjs.com/package/x402-stakefy-sdk)
 [![npm downloads](https://img.shields.io/npm/dm/x402-stakefy-sdk.svg?style=flat-square)](https://www.npmjs.com/package/x402-stakefy-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
-[![Solana](https://img.shields.io/badge/Solana-Mainnet-14F195.svg?style=flat-square)](https://solana.com/)
 
-**The most feature-rich x402 payment SDK for Solana** — Production-ready infrastructure with 10x lower fees than competitors.
+**The only x402 SDK with enterprise features, cryptographic receipts, and 90% lower fees than competitors.**
 
-[🚀 Live Demo](https://stakefy-x402-demo-1twf7cczm-jasper-soes-projects.vercel.app) · [📖 Full Docs](https://github.com/JaspSoe/stakefy-x402) · [🐦 Twitter](https://twitter.com/stakefy)
+[🚀 Live Demo](https://stakefy-x402-demo-1twf7cczm-jasper-soes-projects.vercel.app) · [📖 GitHub](https://github.com/JaspSoe/stakefy-x402) · [�� 6 Examples](https://github.com/JaspSoe/stakefy-x402/tree/main/examples)
 
 ---
 
-## Why Stakefy x402?
+## 🔥 Why Stakefy Beats PayAI
 
-Built for developers who need more than basic payment verification. Stakefy delivers a complete payment infrastructure with features that matter for production applications.
+| Feature | Stakefy | PayAI |
+|---------|:-------:|:-----:|
+| **Fees** | **0.1%** | 1-2% |
+| **Receipt Verification** | ✅ SHA-256 | ❌ |
+| **Enterprise Features** | ✅ Full | ❌ |
+| **Social Payments** | ✅ `payToX()` | ❌ |
+| **Budget Presets** | ✅ 4 types | ❌ |
+| **Solana Primitives** | ✅ Escrow, Drift | ❌ |
+| **Live Examples** | ✅ 6 apps | ❌ |
 
-| Feature | Stakefy x402 | Competitors |
-|---------|:------------:|:-----------:|
-| **Transaction Fees** | **0.1%** | 1-2% |
-| **Social Payments** | ✅ @username support | ❌ |
-| **Session Budgets** | ✅ Full implementation | ❌ |
-| **Payment Channels** | ✅ Recurring payments | ❌ |
-| **Auto-402 Handler** | ✅ Fetch interceptor | ❌ |
-| **React Hooks** | ✅ Complete library | Limited |
-| **Express Middleware** | ✅ Drop-in integration | Limited |
-| **USDC Support** | ✅ Native | ✅ |
-| **Production Ready** | ✅ Mainnet deployed | Varies |
-
-**Save 90% on fees. Get 10x more features.**
+**[Full Comparison →](https://github.com/JaspSoe/stakefy-x402/blob/main/FEATURES.md)**
 
 ---
 
-## Installation
+## ⚡ Quick Start
 ```bash
-npm install x402-stakefy-sdk
+npm install x402-stakefy-sdk@3.0.0
 ```
 
-Optional packages:
-```bash
-npm install x402-stakefy-react      # React hooks & components
-npm install stakefy-express         # Express middleware
-```
-
----
-
-## Quick Start
-
-### Basic Payment (Client)
+### Basic Payment
 ```typescript
 import { StakefyX402Client } from 'x402-stakefy-sdk';
 
@@ -56,366 +40,187 @@ const client = new StakefyX402Client({
   network: 'mainnet-beta'
 });
 
-// Create payment request
 const payment = await client.createPayment({
-  amount: 0.1,                    // 0.1 USDC
-  merchantId: 'YOUR_WALLET_ADDRESS',
+  amount: 0.1,
+  merchantId: 'YOUR_WALLET',
   reference: 'order-123'
 });
-
-console.log('Payment URL:', payment.solanaPayUrl);
-console.log('QR Code:', payment.qrCode);
 ```
-
-### Auto-402 Interceptor
-
-Automatically handle 402 Payment Required responses:
-```typescript
-import { auto } from 'x402-stakefy-sdk';
-
-// Initialize once - handles all 402s automatically
-auto({
-  wallet: yourSolanaWallet,
-  network: 'mainnet-beta'
-});
-
-// All fetch requests now handle payments automatically
-const response = await fetch('https://api.example.com/protected');
-// If 402 received → payment processed → request retried seamlessly
-```
-
-### Server-Side Verification
-```typescript
-import { StakefyX402Client } from 'x402-stakefy-sdk';
-
-const client = new StakefyX402Client({
-  apiUrl: 'https://stakefy-x402-production.up.railway.app',
-  network: 'mainnet-beta'
-});
-
-// Verify on-chain payment
-const isValid = await client.verifyPayment(
-  paymentSignature,
-  expectedAmount,
-  merchantWallet
-);
-
-if (isValid) {
-  // Serve protected content
-  return res.json({ data: 'Premium content' });
-}
-```
-
----
-
-## Core Features
 
 ### Social Payments
-
-Send payments to users by username instead of wallet addresses:
 ```typescript
-const payment = await client.createPayment({
-  amount: 1.0,
-  recipient: '@username',    // Pay by social handle
-  reference: 'tip-2024'
-});
+import { payToX } from 'x402-stakefy-sdk';
+
+// Pay by username!
+await payToX(client, '@creator', 0.25);
 ```
 
-### Session Budgets
-
-Pre-approve spending limits for seamless multi-request flows:
+### Budget Presets
 ```typescript
-const budget = await client.createSessionBudget({
-  maxAmount: 10.0,           // Max 10 USDC
-  duration: 3600,            // Valid for 1 hour
-  merchantId: 'MERCHANT_WALLET'
-});
+import { oneShot, perMinute, perMonth } from 'x402-stakefy-sdk';
 
-// Client makes multiple requests without re-approving each payment
-```
-
-### Payment Channels
-
-Enable recurring payments with pre-authorized channels:
-```typescript
-const channel = await client.createPaymentChannel({
-  amount: 5.0,
-  frequency: 'daily',
-  recipient: 'MERCHANT_WALLET',
-  duration: 30               // 30 days
-});
+await oneShot(client, merchant, user, 100, 0.01);  // 100 payments
+await perMinute(client, merchant, user, 0.1, 60);  // $0.10/min
+await perMonth(client, merchant, user, 9.99);      // $9.99/month
 ```
 
 ---
 
-## React Integration
-
-### Payment Button Component
+## 🏢 NEW: Enterprise Features
 ```typescript
-import { PaymentButton } from 'x402-stakefy-react';
+import { createEnterpriseClient } from 'x402-stakefy-sdk';
 
-function CheckoutPage() {
-  return (
-    <PaymentButton
-      amount={0.5}
-      merchantId="MERCHANT_WALLET"
-      onSuccess={(signature) => console.log('Paid!', signature)}
-      onError={(error) => console.error(error)}
-    >
-      Pay 0.5 USDC
-    </PaymentButton>
-  );
-}
+const enterprise = createEnterpriseClient(API_URL);
+
+// Organization badges
+const badge = await enterprise.getOrgBadge('org-123');
+
+// Usage quotas
+const quota = await enterprise.getQuota('org-123', 'project');
+
+// Analytics
+const metrics = await enterprise.getMetrics('org-123', 'project', 'month');
+
+// Invoices
+const invoice = await enterprise.generateInvoice('org-123', '2024-10', receipts);
 ```
 
-### usePayment Hook
+**[Enterprise Docs →](https://github.com/JaspSoe/stakefy-x402/blob/main/ENTERPRISE.md)**
+
+---
+
+## 🔐 NEW: Receipt Verification
 ```typescript
-import { usePayment } from 'x402-stakefy-react';
+import { verifyReceipt, verifySession } from 'x402-stakefy-sdk';
 
-function MyComponent() {
-  const { createPayment, loading, error } = usePayment({
-    network: 'mainnet-beta'
-  });
+// Cryptographic proof with SHA-256
+const receipt = await verifyReceipt({
+  signature: 'TX_SIG',
+  expectedAmount: 0.1,
+  expectedMerchant: 'WALLET'
+}, connection);
 
-  const handlePay = async () => {
-    const result = await createPayment({
-      amount: 1.0,
-      merchantId: 'MERCHANT_WALLET'
-    });
-    console.log('Payment URL:', result.solanaPayUrl);
-  };
+console.log(receipt.proof);     // SHA-256 hash
+console.log(receipt.verified);  // true
+```
 
-  return <button onClick={handlePay}>Pay Now</button>;
-}
+**[Receipt Spec →](https://github.com/JaspSoe/stakefy-x402/blob/main/RECEIPT-SPEC.md)**
+
+---
+
+## 🚀 NEW: Solana Primitives
+
+### Fast Escrow
+```typescript
+import { FastEscrow } from 'x402-stakefy-sdk';
+
+const escrow = new FastEscrow(connection);
+await escrow.create({ buyer, seller, amount: 10, timeout: 3600 });
+await escrow.release(escrowId);
+```
+
+### Partial Settlement
+```typescript
+import { PartialSettler } from 'x402-stakefy-sdk';
+
+const settler = new PartialSettler();
+await settler.settle({ channelId, amount: 1.0, nonce: 1, merchant });
+```
+
+### Drift Protocol
+```typescript
+import { DriftX402 } from 'x402-stakefy-sdk';
+
+const drift = new DriftX402('MERCHANT', 0.01);
+const trade = await drift.trade({ market: 'SOL-PERP', side: 'long', size: 1, leverage: 10 });
 ```
 
 ---
 
-## Express Integration
+## 🎮 6 Live Examples
 
-### Paywall Middleware
+Copy-paste ready applications:
+
+1. **[Next.js Paywall](https://github.com/JaspSoe/stakefy-x402/tree/main/examples/nextjs-paywall)** - Content paywall
+2. **[Stripe Clone](https://github.com/JaspSoe/stakefy-x402/tree/main/examples/stripe-clone)** - Subscription billing
+3. **[Content Paywall](https://github.com/JaspSoe/stakefy-x402/tree/main/examples/content-paywall)** - Pay-per-view + tips
+4. **[Gaming Microtx](https://github.com/JaspSoe/stakefy-x402/tree/main/examples/gaming-microtx)** - Session budgets
+5. **[QR POS](https://github.com/JaspSoe/stakefy-x402/tree/main/examples/qr-pos)** - Point-of-sale
+6. **[SaaS Seats](https://github.com/JaspSoe/stakefy-x402/tree/main/examples/saas-seats)** - Team billing
+
+**[View All Examples →](https://github.com/JaspSoe/stakefy-x402/tree/main/examples)**
+
+---
+
+## 📦 What's Included
 ```typescript
-import express from 'express';
-import { stakefyPaywall } from 'stakefy-express';
+// Core
+import { StakefyX402Client, payToX, oneShot, perMinute, perMonth } from 'x402-stakefy-sdk';
 
-const app = express();
+// Enterprise
+import { createEnterpriseClient, OrganizationBadge, UsageQuota } from 'x402-stakefy-sdk';
 
-app.get('/api/premium', 
-  stakefyPaywall({
-    amount: 0.1,
-    merchantWallet: 'YOUR_WALLET'
-  }),
-  (req, res) => {
-    res.json({ data: 'Premium content unlocked!' });
-  }
-);
-```
+// Receipts
+import { verifyReceipt, verifySession, PaymentReceipt } from 'x402-stakefy-sdk';
 
-### Budget Middleware
-```typescript
-import { stakefyBudget } from 'stakefy-express';
+// Solana Primitives
+import { FastEscrow, PartialSettler, DriftX402 } from 'x402-stakefy-sdk';
 
-app.use('/api/*', stakefyBudget({
-  maxAmount: 5.0,
-  duration: 3600
-}));
+// React
+import { PaymentButton, Paywall, usePayment } from 'x402-stakefy-sdk';
+
+// Express
+import { stakefyPaywall, stakefyBudget } from 'x402-stakefy-sdk';
 ```
 
 ---
 
-## API Reference
+## 💰 Pricing Comparison
 
-### StakefyX402Client
-```typescript
-interface StakefyX402ClientConfig {
-  apiUrl: string;              // Facilitator API URL
-  network: 'mainnet-beta' | 'devnet';
-  wallet?: WalletAdapter;      // Optional: for auto-signing
-}
-```
-
-### Methods
-
-#### `createPayment(options)`
-Creates a payment request and returns Solana Pay URL + QR code.
-```typescript
-interface CreatePaymentOptions {
-  amount: number;              // Amount in USDC
-  merchantId: string;          // Recipient wallet address
-  reference?: string;          // Optional transaction reference
-  recipient?: string;          // Optional: @username for social payments
-}
-```
-
-#### `verifyPayment(signature, amount, merchant)`
-Verifies on-chain payment transaction.
-```typescript
-async verifyPayment(
-  signature: string,           // Transaction signature
-  expectedAmount: number,      // Expected amount in USDC
-  merchantWallet: string       // Merchant's wallet address
-): Promise<boolean>
-```
-
-#### `createSessionBudget(options)`
-Creates a session budget for multiple payments.
-```typescript
-interface SessionBudgetOptions {
-  maxAmount: number;           // Maximum spending limit
-  duration: number;            // Valid duration in seconds
-  merchantId: string;          // Merchant wallet
-}
-```
-
-#### `createPaymentChannel(options)`
-Sets up recurring payment channel.
-```typescript
-interface PaymentChannelOptions {
-  amount: number;              // Payment amount
-  frequency: 'daily' | 'weekly' | 'monthly';
-  recipient: string;           // Recipient wallet
-  duration: number;            // Channel duration in days
-}
-```
+| Monthly Volume | Stakefy (0.1%) | PayAI (1-2%) | You Save |
+|----------------|:--------------:|:------------:|:--------:|
+| $10,000 | $10 | $100-200 | **$1,080-2,280/year** |
+| $100,000 | $100 | $1,000-2,000 | **$10,800-22,800/year** |
 
 ---
 
-## Examples
+## 📖 Documentation
 
-### Next.js API Route
-```typescript
-// pages/api/content.ts
-import { StakefyX402Client } from 'x402-stakefy-sdk';
-
-export default async function handler(req, res) {
-  const client = new StakefyX402Client({
-    apiUrl: process.env.STAKEFY_API_URL,
-    network: 'mainnet-beta'
-  });
-
-  const paymentHeader = req.headers['x-payment'];
-  
-  if (!paymentHeader) {
-    const payment = await client.createPayment({
-      amount: 0.1,
-      merchantId: process.env.MERCHANT_WALLET
-    });
-    
-    return res.status(402).json({
-      error: 'Payment Required',
-      paymentUrl: payment.solanaPayUrl
-    });
-  }
-
-  const isValid = await client.verifyPayment(
-    paymentHeader,
-    0.1,
-    process.env.MERCHANT_WALLET
-  );
-
-  if (!isValid) {
-    return res.status(402).json({ error: 'Invalid payment' });
-  }
-
-  return res.json({ data: 'Premium content here' });
-}
-```
-
-### React App with Auto-402
-```typescript
-// App.tsx
-import { auto } from 'x402-stakefy-sdk';
-import { useWallet } from '@solana/wallet-adapter-react';
-
-function App() {
-  const wallet = useWallet();
-
-  useEffect(() => {
-    if (wallet.connected) {
-      auto({
-        wallet: wallet,
-        network: 'mainnet-beta'
-      });
-    }
-  }, [wallet.connected]);
-
-  return <YourApp />;
-}
-```
+- **[GitHub Repository](https://github.com/JaspSoe/stakefy-x402)** - Main docs
+- **[Feature Comparison](https://github.com/JaspSoe/stakefy-x402/blob/main/FEATURES.md)** - vs PayAI
+- **[Receipt Spec](https://github.com/JaspSoe/stakefy-x402/blob/main/RECEIPT-SPEC.md)** - SHA-256 proofs
+- **[Enterprise Guide](https://github.com/JaspSoe/stakefy-x402/blob/main/ENTERPRISE.md)** - Badges, quotas, analytics
+- **[Examples](https://github.com/JaspSoe/stakefy-x402/tree/main/examples)** - 6 production apps
 
 ---
 
-## Network Configuration
+## 🎯 What's New in v3.0.0
 
-### Mainnet
-```typescript
-const client = new StakefyX402Client({
-  apiUrl: 'https://stakefy-x402-production.up.railway.app',
-  network: 'mainnet-beta'
-});
-```
-
-### Devnet
-```typescript
-const client = new StakefyX402Client({
-  apiUrl: 'https://stakefy-x402-production.up.railway.app',
-  network: 'devnet'
-});
-```
+✅ Enterprise features (badges, quotas, analytics, invoices)  
+✅ Receipt verification (SHA-256 cryptographic proofs)  
+✅ Budget presets (oneShot, perMinute, perMonth, nonceOnce)  
+✅ Social payments (payToX)  
+✅ Fast escrow for secure transactions  
+✅ Partial settlement for streaming payments  
+✅ Drift Protocol integration  
+✅ 6 production-ready examples  
 
 ---
 
-## Error Handling
-```typescript
-try {
-  const payment = await client.createPayment({
-    amount: 0.1,
-    merchantId: 'WALLET'
-  });
-} catch (error) {
-  if (error.code === 'INSUFFICIENT_FUNDS') {
-    console.error('User has insufficient USDC');
-  } else if (error.code === 'PAYMENT_REJECTED') {
-    console.error('User rejected payment');
-  } else {
-    console.error('Payment failed:', error.message);
-  }
-}
-```
+## 💬 Support
+
+- 📧 sayhello@stakefy.io
+- 🐦 [@stakefy](https://twitter.com/stakefy)
+- 💬 [GitHub Issues](https://github.com/JaspSoe/stakefy-x402/issues)
 
 ---
 
-## Package Ecosystem
+## 📄 License
 
-| Package | Description | NPM |
-|---------|-------------|-----|
-| **x402-stakefy-sdk** | Core SDK (this package) | [![npm](https://img.shields.io/npm/v/x402-stakefy-sdk)](https://npmjs.com/package/x402-stakefy-sdk) |
-| **x402-stakefy-react** | React hooks & components | [![npm](https://img.shields.io/npm/v/x402-stakefy-react)](https://npmjs.com/package/x402-stakefy-react) |
-| **stakefy-express** | Express middleware | [![npm](https://img.shields.io/npm/v/stakefy-express)](https://npmjs.com/package/stakefy-express) |
+MIT © Stakefy Team
 
 ---
 
-## Resources
+**The only x402 SDK built for enterprises. 90% lower fees. 10x more features.**
 
-- **Live Demo:** https://stakefy-x402-demo-1twf7cczm-jasper-soes-projects.vercel.app
-- **Full Documentation:** https://github.com/JaspSoe/stakefy-x402
-- **API Reference:** https://github.com/JaspSoe/stakefy-x402/blob/main/API.md
-- **Examples:** https://github.com/JaspSoe/stakefy-x402/tree/main/examples
-- **Twitter:** [@stakefy](https://twitter.com/stakefy)
-- **Email:** sayhello@stakefy.io
-
----
-
-## Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](https://github.com/JaspSoe/stakefy-x402/blob/main/CONTRIBUTING.md) for guidelines.
-
----
-
-## License
-
-MIT © Stakefy
-
----
-
-**Built with ❤️ by the Stakefy team**
+*PayAI doesn't have receipts, enterprise features, or our Solana primitives. [See why →](https://github.com/JaspSoe/stakefy-x402/blob/main/FEATURES.md)*

@@ -12,7 +12,7 @@ export function useStakefyPayment() {
 
   const client = new StakefyX402Client({
     apiUrl: 'https://stakefy-x402-production.up.railway.app',
-    network: 'devnet',
+    network: 'mainnet-beta',
   });
 
   const pay = async (request: Omit<PaymentRequest, 'reference'>) => {
