@@ -4,7 +4,6 @@ import { SolanaService } from './solana';
 import { WebhookService, WebhookPayload } from './webhooks';
 import { QRCodeService } from './qrcode';
 import { PaymentRequest, PaymentSession, VerifyRequest, SettleRequest, CreateBudgetRequest, SessionBudget, BudgetPaymentRequest, CreateUsernameRequest, UserProfile, UsernamePaymentRequest, CreateChannelRequest, PaymentChannel, ChannelPaymentRequest, SettleChannelRequest } from './types';
-import { createReceiptFromPayment } from '@stakefy-x402/core/receipts';
 import { config } from './config';
 import { verify as x402Verify, Supported } from 'x402';
 
@@ -178,15 +177,19 @@ router.post('/payment/verify', async (req: Request, res: Response) => {
 router.post('/payment/settle', async (req: Request, res: Response) => {
   try {
     const { sessionId, merchantAddress }: SettleRequest = req.body;
+
     const session = sessions.get(sessionId);
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
     }
+
     if (session.status !== 'completed') {
       return res.status(400).json({ error: 'Payment not completed' });
     }
-    const { Keypair, Connection } = await import('@solana/web3.js');
+
+    const { Keypair } = await import('@solana/web3.js');
     const keypair = Keypair.fromSecretKey(new Uint8Array(session.keypair));
+
     const signature = await solanaService.settlePayment(
       keypair,
       merchantAddress,
@@ -195,29 +198,11 @@ router.post('/payment/settle', async (req: Request, res: Response) => {
       session.feeAmount
     );
 
-    // Generate SHA-256 proof receipt
-    const connection = new Connection(config.rpcUrl);
-    const tx = await connection.getTransaction(signature, {
-      maxSupportedTransactionVersion: 0
-    });
-    
-    const blockHeight = tx?.slot || 0;
-    const receipt = createReceiptFromPayment(
-      signature,
-      session.amount,
-      merchantAddress,
-      session.depositAddress,
-      session.reference,
-      blockHeight
-    );
-
     res.json({ 
       success: true,
       signature,
       merchantAmount: session.amount,
-      feeAmount: session.feeAmount,
-      proof: receipt.proof,
-      receipt: receipt
+      feeAmount: session.feeAmount
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -1019,55 +1004,3 @@ router.post('/channel/settle', async (req: Request, res: Response) => {
 });
 
 export default router;
-
-// Verify payment by transaction signature
-router.post('/api/verify', async (req: Request, res: Response) => {
-  try {
-    const { signature } = req.body;
-
-    if (!signature) {
-      return res.status(400).json({ error: 'Signature required' });
-    }
-
-    // Verify on-chain
-    const connection = new Connection(process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com');
-    const tx = await connection.getTransaction(signature, {
-      maxSupportedTransactionVersion: 0
-    });
-
-    if (!tx) {
-      return res.status(404).json({
-        verified: false,
-        message: 'Transaction not found on blockchain'
-      });
-    }
-
-    if (tx.meta?.err) {
-      return res.status(400).json({
-        verified: false,
-        message: 'Transaction failed',
-        error: tx.meta.err
-      });
-    }
-
-    // Calculate amount transferred
-    const preBalance = tx.meta?.preBalances[1] || 0;
-    const postBalance = tx.meta?.postBalances[1] || 0;
-    const amount = (postBalance - preBalance) / 1e9;
-
-    return res.json({
-      verified: true,
-      signature,
-      block: tx.slot,
-      timestamp: new Date(tx.blockTime! * 1000),
-      amount,
-      message: '✅ Payment verified through Stakefy facilitator'
-    });
-  } catch (error: any) {
-    console.error('Verify error:', error);
-    return res.status(500).json({
-      verified: false,
-      error: error.message
-    });
-  }
-});
